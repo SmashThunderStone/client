@@ -786,7 +786,7 @@ const CastMenuActionsContent: FC<CastMenuActionsProps> = memo(
                       className={classNames(
                         'flex flex-row items-center !justify-center space-x-1 px-[10px] py-[12px] !text-base !font-normal',
 
-                        '!bg-[#7C65C1] hover:!bg-[#7C65C1F0]',
+                        '!bg-[#E10600] hover:!bg-[#B40500]',
                       )}
                       onClick={() => {
                         setShowCastInfoModal(false);

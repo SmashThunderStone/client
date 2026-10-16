@@ -186,7 +186,7 @@ const UserChannelStreakModalContent: React.FC<UserChannelStreakModalProps> =
               </DefaultButton>
               <DefaultButton
                 title="Go to channel"
-                className="outline-hidden flex h-10 !w-full  flex-row items-center !justify-center space-x-1 !text-base !font-normal !bg-action-primary hover:!bg-[#7C65C1F0]"
+                className="outline-hidden flex h-10 !w-full  flex-row items-center !justify-center space-x-1 !text-base !font-normal !bg-action-primary hover:!bg-[#B40500]"
                 onClick={onGoToChannelClick}
               >
                 <span className="flex flex-row items-center text-center text-light">

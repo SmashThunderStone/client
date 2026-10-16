@@ -147,7 +147,7 @@ const TokenAlertNotificationGroup: FC<TokenAlertNotificationGroupProps> = memo(
               />
             ) : (
               <div
-                className="flex items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900"
+                className="flex items-center justify-center rounded-full bg-[#FFF1F0] dark:bg-[#3D1010]"
                 style={{
                   width: 48,
                   height: 48,

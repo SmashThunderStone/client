@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="210" height="32" viewBox="0 0 210 32" fill="none">
+  <rect width="32" height="32" rx="7" fill="#E10600"/>
+  <path d="M18.7 4.1 8.4 16.7h6.4l-2.8 11.2 11.2-14.4h-6.3L18.7 4.1Z" fill="#FFFFFF"/>
+  <text x="42" y="23" fill="#0A0A0A" font-family="Inter, Arial, Helvetica, sans-serif" font-size="20" font-weight="700">SmashCast</text>
+</svg>

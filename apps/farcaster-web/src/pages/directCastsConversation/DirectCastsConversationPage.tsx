@@ -153,8 +153,8 @@ const DropOverlayImageIcon: React.FC = React.memo(() => {
 
 const DirectCastsDropOverlay: React.FC = React.memo(() => {
   return (
-    <div className="absolute inset-0 z-20 flex size-full flex-col items-center justify-center bg-[#f4f4f4] p-2 dark:bg-[#2A2432]">
-      <div className="flex size-full flex-col items-center justify-center space-y-2 rounded-lg border-2 border-dashed bg-[#f3f3f3] border-default dark:bg-[#2A2432]">
+    <div className="absolute inset-0 z-20 flex size-full flex-col items-center justify-center bg-[#f4f4f4] p-2 dark:bg-[#1A1A1A]">
+      <div className="flex size-full flex-col items-center justify-center space-y-2 rounded-lg border-2 border-dashed bg-[#f3f3f3] border-default dark:bg-[#1A1A1A]">
         <span className="rounded-lg p-4 bg-overlay-semi-medium text-action-purple">
           <DropOverlayImageIcon />
         </span>
@@ -182,7 +182,7 @@ const DirectCastsScrollDownButton: React.FC<DirectCastsScrollDownButtonProps> =
 
     return (
       <div
-        className="absolute bottom-3 right-3 z-10 flex cursor-pointer flex-col rounded-full border p-2 shadow-xl bg-app border-default dark:bg-[#342942]"
+        className="absolute bottom-3 right-3 z-10 flex cursor-pointer flex-col rounded-full border p-2 shadow-xl bg-app border-default dark:bg-[#1A1A1A]"
         onClick={onScrollDownClick}
       >
         <ChevronDownIcon size={28} className="translate-y-px" />

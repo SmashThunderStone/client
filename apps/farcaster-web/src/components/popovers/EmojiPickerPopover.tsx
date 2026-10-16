@@ -75,7 +75,7 @@ const EmojiPickerPopover: React.FC<EmojiPickerPopoverProps> = ({
       rows={4}
       maxFrequentRows={1}
       previewPosition="none"
-      color="#8a63d2"
+      color="#E10600"
       skinTonePosition={'none'}
       noResultsEmoji="shrug"
     />

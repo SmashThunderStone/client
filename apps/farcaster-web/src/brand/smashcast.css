@@ -1,0 +1,28 @@
+/*
+ * SmashCast color tokens.
+ *
+ * --smashcast-red is the filled accent (buttons, logo tile).
+ * --smashcast-red-on-dark is for text and links on black surfaces.
+ * The --primary / --ring values feed @neynar/ui utilities.
+ */
+:root {
+  --smashcast-red: #e10600;
+  --smashcast-red-hover: #b40500;
+  --smashcast-red-on-dark: #ff4d42;
+  --smashcast-black: #0a0a0a;
+  --smashcast-red-wash: #fff1f0;
+  --composer-link-color: var(--smashcast-red);
+  --primary: #e10600;
+  --primary-foreground: #ffffff;
+  --ring: #e10600;
+  --sidebar-primary: #e10600;
+  --sidebar-primary-foreground: #ffffff;
+}
+
+.dark {
+  --composer-link-color: var(--smashcast-red-on-dark);
+  --primary: #e10600;
+  --primary-foreground: #ffffff;
+  --ring: var(--smashcast-red-on-dark);
+  --sidebar-primary: #e10600;
+}

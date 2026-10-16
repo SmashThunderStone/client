@@ -45,8 +45,8 @@ const Filter: FC<FilterProps> = memo(
             className={cn(
               'mr-[10px] flex h-[32px] min-w-[80px] items-center justify-center rounded-[50px] px-4 text-[15px] font-medium leading-[24px]',
               value === itemVal
-                ? 'bg-[#7C65C133] text-[#7c65c1] dark:text-[#ffffff]'
-                : 'border border-[#D0D1D259] text-[#546473] bg-app dark:border-[#4C3A4EC0] dark:text-[#8b99a4]',
+                ? 'bg-[#E1060033] text-[#E10600] dark:text-[#ffffff]'
+                : 'border border-[#D0D1D259] text-[#546473] bg-app dark:border-[#2A2A2A] dark:text-[#8b99a4]',
               className,
             )}
           >

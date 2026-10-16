@@ -9,7 +9,7 @@ import { Para } from '~/components/text/Para';
 
 const SupportPage: React.FC = React.memo(() => {
   return (
-    <StandalonePage meta={{ title: 'Farcaster Support' }}>
+    <StandalonePage meta={{ title: 'SmashCast Support' }}>
       <div className="py-4">
         <H1>Support</H1>
         <H2>Important Links</H2>

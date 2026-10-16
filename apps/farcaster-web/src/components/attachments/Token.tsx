@@ -148,7 +148,7 @@ function TokenBadges({ token }: { token: ApiTokenLinkCore }) {
             width={16}
             height={16}
             viewBox="0 0 24 24"
-            className="dark:stroke-[#1b1429'] fill-action-purple stroke-[#f8f6ff]"
+            className="dark:stroke-[#1b1429'] fill-action-purple stroke-[#FFF1F0]"
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"

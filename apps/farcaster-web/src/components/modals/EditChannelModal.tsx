@@ -609,7 +609,7 @@ const EditChannelDetailsContent: FC<{
         <div>
           <div className="flex flex-row items-center gap-1">
             <div className="text-xs font-semibold">External Link</div>
-            <div className="rounded-[35px] bg-[#EFEFEF] px-2.5 py-0.5 text-xs text-muted dark:bg-[#2E2835]">
+            <div className="rounded-[35px] bg-[#EFEFEF] px-2.5 py-0.5 text-xs text-muted dark:bg-[#1A1A1A]">
               Optional
             </div>
           </div>

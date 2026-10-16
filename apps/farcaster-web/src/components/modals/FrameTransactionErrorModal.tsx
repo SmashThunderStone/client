@@ -67,7 +67,7 @@ const FrameTransactionErrorModal: React.FC<FrameTransactionErrorModalProps> =
               <div className="flex size-full max-h-[468px] flex-col justify-between space-y-4">
                 <span className="flex flex-col items-center space-y-4">
                   <span className="flex w-full flex-col items-center space-y-2">
-                    <div className="flex size-[60px] flex-col items-center justify-center rounded-full bg-[#2A24321A]">
+                    <div className="flex size-[60px] flex-col items-center justify-center rounded-full bg-[#E106001A]">
                       <Icon />
                     </div>
                     <span className="text-xl font-semibold">
@@ -92,7 +92,7 @@ const FrameTransactionErrorModal: React.FC<FrameTransactionErrorModalProps> =
                   title="Dismiss"
                   className={classNames(
                     'flex flex-row items-center !justify-center space-x-1 px-[10px] py-[12px] !text-base !font-normal',
-                    '!bg-[#7C65C1] hover:!bg-[#7C65C1F0]',
+                    '!bg-[#E10600] hover:!bg-[#B40500]',
                   )}
                   onClick={onClose}
                 >

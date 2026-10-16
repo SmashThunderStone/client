@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 export type UserSavedTheme = 'light' | 'dark' | 'system';
 
-const DEFAULT_THEME: UserSavedTheme = 'system';
+const DEFAULT_THEME: UserSavedTheme = 'dark';
 
 const STORAGE_KEY = 'user-saved-theme';
 

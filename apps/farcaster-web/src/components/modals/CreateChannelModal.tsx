@@ -236,7 +236,7 @@ const CreateChannelModal: FC<CreateChannelModalProps> = memo(({ onClose }) => {
               alt={'Header'}
               className="z-0 px-4 pb-6 pt-4"
             />
-            <div className="absolute inset-0 z-10 flex h-[230px] items-end rounded-t-lg bg-gradient-to-t from-white from-10% to-transparent text-2xl text-default dark:from-[#1f162a]">
+            <div className="absolute inset-0 z-10 flex h-[230px] items-end rounded-t-lg bg-gradient-to-t from-white from-10% to-transparent text-2xl text-default dark:from-[#1A1010]">
               <span className="pl-6 font-semibold">
                 A home for your community
               </span>

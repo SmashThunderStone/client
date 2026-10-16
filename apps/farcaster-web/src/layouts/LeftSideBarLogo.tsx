@@ -1,5 +1,6 @@
 import { FC, memo } from 'react';
 
+import { APP_NAME } from '~/brand/brand';
 import { FilledLogo } from '~/components/FilledLogo';
 import { LinkToHomeFeed } from '~/components/links/LinkToHomeFeed';
 import { LogoBrandContextMenu } from '~/components/LogoBrandContextMenu';
@@ -21,8 +22,11 @@ const LeftSideBarLogo: FC<LeftSideBarLogoProps> = memo(({ title }) => {
           scrollToTopOfRoot();
         }}
       >
-        <div className="flex h-14 flex-col items-center justify-center md:items-start">
+        <div className="flex h-14 items-center justify-center gap-2 md:items-start">
           <FilledLogo size="xs" />
+          <span className="hidden text-[17px] font-semibold tracking-tight xl:inline">
+            {APP_NAME}
+          </span>
         </div>
       </LinkToHomeFeed>
     </LogoBrandContextMenu>

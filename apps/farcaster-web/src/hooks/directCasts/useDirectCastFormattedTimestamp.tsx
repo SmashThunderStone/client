@@ -43,7 +43,7 @@ const useDirectCastFormattedTimestamp = ({
         <div
           className={classNames(
             'flex-shrink-0 select-none text-sm',
-            hasUnread && !muted && '!text-[#7C65C1]',
+            hasUnread && !muted && '!text-[#E10600]',
             hasUnread && muted && 'text-muted',
             applyMutedStyles && 'text-muted',
           )}

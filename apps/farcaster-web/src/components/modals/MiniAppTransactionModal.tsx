@@ -184,7 +184,7 @@ const MiniAppTransactionModalErrorBoundary: React.FC<
         <div className="flex w-full flex-col space-y-1">
           <DefaultButton
             title="Continue in wallet"
-            className="flex h-10 !w-full flex-row items-center !justify-center space-x-1 !text-base !font-normal !bg-action-primary hover:!bg-[#7C65C1F0]"
+            className="flex h-10 !w-full flex-row items-center !justify-center space-x-1 !text-base !font-normal !bg-action-primary hover:!bg-[#B40500]"
             onClick={onExternalClick}
           >
             <span className="flex flex-row items-center">
@@ -730,7 +730,7 @@ const MiniAppTransactionModalContent: React.FC<
           title="Continue in wallet"
           className={classNames(
             'flex flex-row items-center !justify-center space-x-1 px-[10px] py-[12px] !text-base !font-normal',
-            '!bg-[#7C65C1] hover:!bg-[#7C65C1F0]',
+            '!bg-[#E10600] hover:!bg-[#B40500]',
           )}
           onClick={submitTransactionToWallet}
           disabled={typeof trxData === 'undefined' || transactionInProgress}
@@ -768,8 +768,8 @@ const FrameTransactionInProgressModalContent: React.FC<
   return (
     <div className="flex h-min w-full flex-col justify-between space-y-4">
       <div className="flex size-full flex-col items-center justify-center space-y-4 p-4">
-        <div className="flex flex-col items-center justify-center rounded-full bg-[#8A63D21A] p-4">
-          <LoadingIndicator containerClassName="!text-[#8A63D2] !border-[4px]" />
+        <div className="flex flex-col items-center justify-center rounded-full bg-[#E106001A] p-4">
+          <LoadingIndicator containerClassName="!text-[#E10600] !border-[4px]" />
         </div>
         <span className="text-xl font-semibold">Check wallet</span>
         <span className="text-center text-sm text-faint">
@@ -918,7 +918,7 @@ const FrameTransactionScanModalContent: React.FC<
           className={classNames(
             'flex flex-row items-center !justify-center space-x-1 px-[10px] py-[12px] !text-base !font-normal',
             severity === 'WARN' && '!bg-[#D6A243] hover:!bg-[#D6A243F0]',
-            severity === 'BLOCK' && '!bg-[#7C65C1] hover:!bg-[#7C65C1F0]',
+            severity === 'BLOCK' && '!bg-[#E10600] hover:!bg-[#B40500]',
           )}
           onClick={severity === 'WARN' ? onProceed : onCancel}
         >
@@ -1064,7 +1064,7 @@ const FrameTransactionScanErrorModalContent: React.FC<
           title="Cancel"
           className={classNames(
             'flex flex-row items-center !justify-center space-x-1 px-[10px] py-[12px] !text-base !font-normal',
-            '!bg-[#7C65C1] hover:!bg-[#7C65C1F0]',
+            '!bg-[#E10600] hover:!bg-[#B40500]',
           )}
           onClick={onCancel}
         >

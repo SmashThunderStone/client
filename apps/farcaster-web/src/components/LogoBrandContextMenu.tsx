@@ -21,13 +21,13 @@ type MenuItem = {
 const MENU_ITEMS: MenuItem[] = [
   {
     label: 'Download logo as .svg',
-    href: '/brand/farcaster-icon.svg',
-    filename: 'farcaster-icon.svg',
+    href: '/brand/smashcast-mark.svg',
+    filename: 'smashcast-mark.svg',
   },
   {
     label: 'Download wordmark as .svg',
-    href: '/brand/farcaster-combo.svg',
-    filename: 'farcaster-combo.svg',
+    href: '/brand/smashcast-wordmark-on-dark.svg',
+    filename: 'smashcast-wordmark.svg',
   },
 ];
 

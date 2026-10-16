@@ -519,9 +519,9 @@ const NoRitualsEmptyState: React.FC<NoRitualsEmptyStateProps> = React.memo(
               y2="32"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stopColor="#DEAEEB" />
-              <stop offset="0.44" stopColor="#6944BA" />
-              <stop offset="1" stopColor="#ACB0ED" />
+              <stop stopColor="#FFB0AC" />
+              <stop offset="0.44" stopColor="#E10600" />
+              <stop offset="1" stopColor="#FFD4D1" />
             </linearGradient>
             <linearGradient
               id="paint1_linear_6703_17315"
@@ -531,9 +531,9 @@ const NoRitualsEmptyState: React.FC<NoRitualsEmptyStateProps> = React.memo(
               y2="32"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stopColor="#DEAEEB" />
-              <stop offset="0.44" stopColor="#6944BA" />
-              <stop offset="1" stopColor="#ACB0ED" />
+              <stop stopColor="#FFB0AC" />
+              <stop offset="0.44" stopColor="#E10600" />
+              <stop offset="1" stopColor="#FFD4D1" />
             </linearGradient>
             <linearGradient
               id="paint2_linear_6703_17315"
@@ -543,9 +543,9 @@ const NoRitualsEmptyState: React.FC<NoRitualsEmptyStateProps> = React.memo(
               y2="32"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stopColor="#DEAEEB" />
-              <stop offset="0.44" stopColor="#6944BA" />
-              <stop offset="1" stopColor="#ACB0ED" />
+              <stop stopColor="#FFB0AC" />
+              <stop offset="0.44" stopColor="#E10600" />
+              <stop offset="1" stopColor="#FFD4D1" />
             </linearGradient>
           </defs>
         </svg>

@@ -62,7 +62,7 @@
   --toastify-toast-bd-radius: 0.5rem;
   --toastify-color-success: #2f855a;
   --toastify-color-error: #d51338;
-  --toastify-color-info: #7c65c1;
+  --toastify-color-info: #E10600;
   --toastify-color-light: rgba(0, 0, 0, 0);
   --toastify-toast-width: 382px;
 }
@@ -138,6 +138,7 @@
 
 @import 'tailwindcss';
 @import '@neynar/ui/styles';
+@import './brand/smashcast.css';
 @config '../tailwind.config.js';
 
 * {
@@ -251,11 +252,11 @@ html body[data-scroll-locked] {
   }
 
   :root {
-    --composer-link-color: #7959ff;
+    --composer-link-color: var(--smashcast-red);
   }
 
   .dark {
-    --composer-link-color: #866aff;
+    --composer-link-color: var(--smashcast-red-on-dark);
   }
 
   #webpack-dev-server-client-overlay {
@@ -406,7 +407,7 @@ html body[data-scroll-locked] {
       .only-on-hover-scrollbar,
       .scrollbar-vert,
       .scrollbar-horz {
-        scrollbar-color: #423466 #101010;
+        scrollbar-color: #2A2A2A #101010;
       }
     }
   }
@@ -553,17 +554,13 @@ em-emoji-picker {
 }
 
 .landing-bg {
-  background: linear-gradient(180deg, #361aac 0%, #080418 100%);
-  background-blend-mode: overlay, normal, normal;
-  background-size:
-    cover,
-    100px 100px,
-    cover;
-  background-repeat: no-repeat, repeat, no-repeat;
-  background-position:
-    center,
-    0 0,
-    center;
+  background:
+    radial-gradient(
+      900px 520px at 18% 0%,
+      rgba(225, 6, 0, 0.55),
+      transparent 58%
+    ),
+    linear-gradient(180deg, #2a0505 0%, #0a0a0a 46%, #000000 100%);
 }
 
 .landing-btn-primary-bg {
@@ -579,7 +576,7 @@ em-emoji-picker {
   border-radius: 300px;
   border: 1px solid rgba(255, 255, 255, 0.15);
   background: rgba(255, 255, 255, 0.3);
-  box-shadow: 0 0 12px 0 rgba(139, 124, 255, 0.4);
+  box-shadow: 0 0 12px 0 rgba(225, 6, 0, 0.45);
 }
 
 .glass-landing-bg {
