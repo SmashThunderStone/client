@@ -48,6 +48,10 @@ type HubMessage = {
     };
     userDataBody?: { type?: string; value?: string };
     linkBody?: { type?: string; targetFid?: number };
+    reactionBody?: {
+      type?: string;
+      targetCastId?: { fid?: number; hash?: string } | null;
+    } | null;
   };
 };
 
@@ -286,6 +290,13 @@ async function followedFids(
   } catch {
     return fidsFromLinks(await hub.getJson<MessagePage>(base));
   }
+}
+
+export function hubMessageToCast(
+  message: HubMessage,
+  fallbackFid?: number,
+): HubCast | null {
+  return messageToCast(message, fallbackFid);
 }
 
 function messageToCast(

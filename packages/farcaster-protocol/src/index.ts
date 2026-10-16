@@ -30,7 +30,18 @@ export {
   publishMessage,
   reactionReadBackPath,
 } from './messages';
+export type {
+  HubActorEvent,
+  HubCastReactions,
+  HubNotificationFeed,
+} from './notifications';
+export {
+  addedActorEvents,
+  getHubNotifications,
+  NOTIFICATION_CAST_LIMIT,
+} from './notifications';
 export type { HubCast, HubProfile } from './reads';
+export { hubMessageToCast } from './reads';
 export {
   getCastById,
   getCastsByFid,

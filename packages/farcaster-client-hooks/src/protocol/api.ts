@@ -15,11 +15,13 @@ import {
   ApiDeleteRecast200Response,
   ApiGetFeedItems200Response,
   ApiGetFollowing200Response,
+  ApiGetNotificationsForTab200Response,
   ApiGetUserAppContext200Response,
   ApiGetUserByUsername200Response,
   ApiGetUserCasts200Response,
   ApiGetUserPreferences200Response,
   ApiGetUserThreadCasts200Response,
+  ApiNotificationGroup,
   ApiQuoteCastEmbed,
   ApiUser,
 } from 'farcaster-client-data';
@@ -33,6 +35,7 @@ import {
   getCastsByFid,
   getChronologicalFeed,
   getFollowingPage,
+  getHubNotifications,
   getLightProfile,
   getProfileByFid,
   getProfileByUsername,
@@ -529,6 +532,174 @@ export function protocolUserPreferences(): ApiGetUserPreferences200Response {
   };
 }
 
+const NOTIFICATION_PREVIEW_LIMIT = 8;
+const NOTIFICATION_GROUP_LIMIT = 80;
+const SEEN_KEY_PREFIX = 'smashcast.notificationsSeenAt.';
+
+export function protocolNotificationsSeenAt(fid: number): number {
+  try {
+    const raw = globalThis.localStorage?.getItem(`${SEEN_KEY_PREFIX}${fid}`);
+    const value = raw ? Number(raw) : 0;
+    return Number.isFinite(value) ? value : 0;
+  } catch {
+    return 0;
+  }
+}
+
+export function markProtocolNotificationsSeen(fid: number): void {
+  try {
+    globalThis.localStorage?.setItem(
+      `${SEEN_KEY_PREFIX}${fid}`,
+      String(Date.now()),
+    );
+  } catch {
+    // Storage can be blocked. The list still renders.
+  }
+}
+
+function unreadSince(seenAt: number, timestamp: number): boolean {
+  return seenAt > 0 && timestamp > seenAt;
+}
+
+export async function protocolNotificationGroups(
+  fid: number,
+): Promise<ApiGetNotificationsForTab200Response['result']['notifications']> {
+  const hubUrl = protocolHubUrl();
+  if (!hubUrl) {
+    return [];
+  }
+  const feed = await getHubNotifications(hubUrl, fid);
+  const profiles = new Map(
+    feed.profiles.map((profile) => [profile.fid, hubProfileToApiUser(profile)]),
+  );
+  const userOf = (actorFid: number): ApiUser =>
+    profiles.get(actorFid) ?? fallbackUser(actorFid);
+  const self = userOf(fid);
+  const seenAt = protocolNotificationsSeenAt(fid);
+  const groups: ApiNotificationGroup[] = [];
+
+  for (const row of feed.likes) {
+    const latest = row.reactions[0]?.timestampMs ?? 0;
+    const preview = row.reactions.slice(0, NOTIFICATION_PREVIEW_LIMIT);
+    groups.push({
+      id: `like:${row.cast.hash}`,
+      type: 'cast-reaction',
+      latestTimestamp: latest,
+      totalItemCount: row.reactions.length,
+      isUnread: unreadSince(seenAt, latest),
+      previewItems: preview.map((reaction) => ({
+        type: 'cast-reaction',
+        id: reaction.hash,
+        timestamp: reaction.timestampMs,
+        actor: userOf(reaction.actorFid),
+        content: {
+          cast: hubCastToApiCast(row.cast, self),
+          reaction: {
+            type: 'like',
+            hash: reaction.hash,
+            reactor: userOf(reaction.actorFid),
+            timestamp: reaction.timestampMs,
+            castHash: row.cast.hash,
+          },
+        },
+      })),
+    });
+  }
+
+  for (const row of feed.recasts) {
+    const latest = row.reactions[0]?.timestampMs ?? 0;
+    const preview = row.reactions.slice(0, NOTIFICATION_PREVIEW_LIMIT);
+    const recastedCast = hubCastToApiCast(row.cast, self);
+    groups.push({
+      id: `recast:${row.cast.hash}`,
+      type: 'recast',
+      latestTimestamp: latest,
+      totalItemCount: row.reactions.length,
+      isUnread: unreadSince(seenAt, latest),
+      previewItems: preview.map((reaction) => ({
+        type: 'recast',
+        id: reaction.hash,
+        timestamp: reaction.timestampMs,
+        actor: userOf(reaction.actorFid),
+        content: {
+          recastedCast,
+          recast: hubCastToApiCast(
+            {
+              hash: reaction.hash,
+              fid: reaction.actorFid,
+              text: '',
+              timestampMs: reaction.timestampMs,
+              embeds: [],
+            },
+            userOf(reaction.actorFid),
+          ),
+        },
+      })),
+    });
+  }
+
+  for (const reply of feed.replies) {
+    const actor = userOf(reply.fid);
+    groups.push({
+      id: `reply:${reply.hash}`,
+      type: 'cast-reply',
+      latestTimestamp: reply.timestampMs,
+      totalItemCount: 1,
+      isUnread: unreadSince(seenAt, reply.timestampMs),
+      previewItems: [
+        {
+          type: 'cast-reply',
+          id: reply.hash,
+          timestamp: reply.timestampMs,
+          actor,
+          content: { cast: hubCastToApiCast(reply, actor) },
+        },
+      ],
+    });
+  }
+
+  for (const mention of feed.mentions) {
+    const actor = userOf(mention.fid);
+    groups.push({
+      id: `mention:${mention.hash}`,
+      type: 'cast-mention',
+      latestTimestamp: mention.timestampMs,
+      totalItemCount: 1,
+      isUnread: unreadSince(seenAt, mention.timestampMs),
+      previewItems: [
+        {
+          type: 'cast-mention',
+          id: mention.hash,
+          timestamp: mention.timestampMs,
+          actor,
+          content: { cast: hubCastToApiCast(mention, actor) },
+        },
+      ],
+    });
+  }
+
+  for (const follow of feed.follows) {
+    groups.push({
+      id: `follow:${follow.hash}`,
+      type: 'follow',
+      latestTimestamp: follow.timestampMs,
+      totalItemCount: 1,
+      isUnread: unreadSince(seenAt, follow.timestampMs),
+      previewItems: [
+        {
+          type: 'follow',
+          id: follow.hash,
+          timestamp: follow.timestampMs,
+          actor: userOf(follow.actorFid),
+        },
+      ],
+    });
+  }
+
+  groups.sort((a, b) => b.latestTimestamp - a.latestTimestamp);
+  return groups.slice(0, NOTIFICATION_GROUP_LIMIT);
+}
+
 export function protocolUserAppContext(): ApiGetUserAppContext200Response['result']['context'] {
   return {
     canAddLinks: true,
@@ -540,6 +711,7 @@ export function protocolUserAppContext(): ApiGetUserAppContext200Response['resul
     regularCastByteLimit: 320,
     longCastByteLimit: 320,
     castEmbedLimit: 2,
+    notificationTabsV2: [{ id: 'all', name: 'All' }],
   };
 }
 

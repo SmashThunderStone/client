@@ -3,6 +3,11 @@ import {
   FarcasterApiClient,
 } from 'farcaster-client-data';
 
+import { protocolNotificationGroups } from '../../../../protocol/api';
+import {
+  protocolReplacesHostedAuth,
+  protocolSession,
+} from '../../../../protocol/runtime';
 import {
   BatchMergeIntoGloballyCachedCasts,
   CastUpdates,
@@ -21,6 +26,29 @@ export const buildNotificationsForTabFetcher = ({
   batchMergeIntoGloballyCachedCasts: BatchMergeIntoGloballyCachedCasts;
 }) => {
   return wrapPaginatedFetcher(async ({ pageParam: cursor }) => {
+    if (protocolReplacesHostedAuth(apiClient)) {
+      const session = protocolSession();
+      const notifications = session
+        ? await protocolNotificationGroups(session.fid)
+        : [];
+      const batchUpdates: CastUpdates[] = [];
+      for (const notification of notifications) {
+        if (notification.previewItems.length === 0) {
+          continue;
+        }
+        if (
+          notification.type === 'cast-mention' ||
+          notification.type === 'cast-reply' ||
+          notification.type === 'cast-reaction'
+        ) {
+          batchUpdates.push(notification.previewItems[0].content.cast);
+        } else if (notification.type === 'recast') {
+          batchUpdates.push(notification.previewItems[0].content.recastedCast);
+        }
+      }
+      batchMergeIntoGloballyCachedCasts({ batchUpdates });
+      return { result: { notifications } };
+    }
     const response = await apiClient.getNotificationsForTab(
       {
         tab,

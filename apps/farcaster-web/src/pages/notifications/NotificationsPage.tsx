@@ -94,6 +94,11 @@ const NotificationsPageContent: FC<NotificationsPageContentProps> = memo(
           >
             <PageTitle>Notifications</PageTitle>
           </PageHeader>
+          {protocolDirectEnabled && (
+            <div className="px-4 pb-2 text-xs text-muted">
+              Likes, replies, mentions, and follows from the hub, newest first.
+            </div>
+          )}
           <Suspense fallback={<FullScreenLoadingIndicator />}>
             <EventingProvider on={`notifications-${currentTab}`}>
               <NotificationsTab
