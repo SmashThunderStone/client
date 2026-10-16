@@ -50,25 +50,24 @@ const AuthSessionRecoveryBridge: FC = memo(() => {
       );
       const authSignatureToken = EIP_191_PREFIX + signatureBase64;
 
-      const response = await fetch(
-        new URL('/v2/onboarding-state', baseApiUrl),
-        {
-          method: 'PUT',
-          headers: {
-            Authorization: `Bearer ${authSignatureToken}`,
-            'Content-Type': 'application/json',
-            // This raw fetch bypasses the apiClient (and its meta headers),
-            // but it MINTS a new auth token — without FC-DEVICE-ID the
-            // backend's one-token-per-device dedup can't replace this
-            // browser's previous session, so every recovery re-mint would
-            // accumulate in auth-tokens:{fid}.
-            'FC-DEVICE-ID': getPersistedDeviceId(),
-          },
-          body: JSON.stringify({
-            authRequest,
-          }),
+      // Concatenate so a path prefix such as `/fc-api` is preserved.
+      // `new URL('/v2/...', base)` would drop that prefix (and `~api`).
+      const response = await fetch(`${baseApiUrl}/v2/onboarding-state`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${authSignatureToken}`,
+          'Content-Type': 'application/json',
+          // This raw fetch bypasses the apiClient (and its meta headers),
+          // but it MINTS a new auth token — without FC-DEVICE-ID the
+          // backend's one-token-per-device dedup can't replace this
+          // browser's previous session, so every recovery re-mint would
+          // accumulate in auth-tokens:{fid}.
+          'FC-DEVICE-ID': getPersistedDeviceId(),
         },
-      );
+        body: JSON.stringify({
+          authRequest,
+        }),
+      });
 
       if (!response.ok) {
         return false;

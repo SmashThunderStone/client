@@ -42,8 +42,8 @@ export const ChannelBadge: FC<ChannelBadgeProps> = memo(
         className={cn([
           'flex flex-row items-center gap-1 rounded-full text-[11px] leading-[16px]',
           color === 'primary'
-            ? 'text-[#8A63D2] bg-light-purple dark:text-[#ffffff]'
-            : 'bg-[#7C65C133] bg-[#EFEFEF] text-muted dark:bg-[#2E2835] ',
+            ? 'text-[#E10600] bg-light-purple dark:text-[#ffffff]'
+            : 'bg-[#E1060033] bg-[#EFEFEF] text-muted dark:bg-[#1A1A1A] ',
           label ? 'px-[6px] py-[2px]' : 'px-[4px] py-[4px]',
         ])}
       >

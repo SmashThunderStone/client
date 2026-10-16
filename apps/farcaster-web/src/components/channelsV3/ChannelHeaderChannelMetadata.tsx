@@ -289,7 +289,7 @@ const ChannelHeaderChannelMetadata: React.FC<ChannelHeaderChannelMetadataProps> 
                   {' '}
                   ·{' '}
                   <div
-                    className="dark:text-light-app-background ml-2 flex cursor-pointer flex-row items-center space-x-1 rounded-full bg-[#7C65C133] px-2 py-0.5 text-xs text-[#7c65c1]"
+                    className="dark:text-light-app-background ml-2 flex cursor-pointer flex-row items-center space-x-1 rounded-full bg-[#E1060033] px-2 py-0.5 text-xs text-[#E10600]"
                     onClick={onChannelHeaderActionClick}
                   >
                     {typeof channel.headerActionMetadata !== 'undefined' &&

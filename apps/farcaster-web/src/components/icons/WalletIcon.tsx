@@ -3,7 +3,7 @@ import React from 'react';
 export function WalletIcon({
   width = 18,
   height = 16,
-  stroke = '#7C65C1',
+  stroke = '#E10600',
 }: {
   width?: number;
   height?: number;

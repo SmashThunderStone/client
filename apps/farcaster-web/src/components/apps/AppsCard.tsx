@@ -66,7 +66,7 @@ const AppsCard: FC<WebAppsCardProps> = memo(
       >
         {/* Icon with Add button — fixed size + shrink-0 so long text never pulls layout */}
         <div className="relative h-[60px] w-[60px] shrink-0">
-          <div className="flex size-[60px] items-center justify-center overflow-hidden rounded-[12px] bg-[#7C65C1]">
+          <div className="flex size-[60px] items-center justify-center overflow-hidden rounded-[12px] bg-[#E10600]">
             {!imageError ? (
               <Image
                 src={icon}
@@ -95,7 +95,7 @@ const AppsCard: FC<WebAppsCardProps> = memo(
                 .join(' ')}
             </h3>
             {featured && (
-              <span className="shrink-0 rounded-full bg-[#7C65C11A] px-2 py-0.5 text-xs font-medium text-[#7C65C1]">
+              <span className="shrink-0 rounded-full bg-[#E106001A] px-2 py-0.5 text-xs font-medium text-[#E10600]">
                 Featured
               </span>
             )}

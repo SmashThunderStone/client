@@ -38,7 +38,7 @@ function FarcasterProBadgeOnProfileUpsell({
 
   return (
     <Clickable disabled={false} onClick={onCtaClick}>
-      <div className="ml-2 flex flex-row items-center gap-1 rounded-full border-[0.3px] border-[#F8F6FF] bg-[#F8F6FF] p-3 px-2 py-1 dark:border-[#231A36] dark:bg-[#1B1429]">
+      <div className="ml-2 flex flex-row items-center gap-1 rounded-full border-[0.3px] border-[#FFF1F0] bg-[#FFF1F0] p-3 px-2 py-1 dark:border-[#1A1010] dark:bg-[#140606]">
         <FarcasterProBadge size={20} />
         <div className="text-sm font-medium text-default">Upgrade</div>
       </div>

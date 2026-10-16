@@ -387,7 +387,7 @@ export const CastImageViewerModal: React.FC<CastImageViewerModalProps> =
 
           {/* Action Button - Full Width */}
           <div className="absolute bottom-0 w-full">
-            <div className="flex w-full items-center justify-center !bg-[#F0EDFF] py-4 dark:!bg-[#342942]">
+            <div className="flex w-full items-center justify-center !bg-[#FFF1F0] py-4 dark:!bg-[#1A1A1A]">
               <span
                 id="mini-app-button"
                 className="text-sm font-semibold !text-action-purple dark:!text-white"

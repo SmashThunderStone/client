@@ -2,6 +2,7 @@ import { Helmet } from '@dr.pogodin/react-helmet';
 import { useUnseen } from 'farcaster-client-hooks';
 import { FC, memo, useEffect } from 'react';
 
+import { APP_DESCRIPTION, APP_NAME, clientDocumentTitle } from '~/brand/brand';
 import { useStandaloneMode } from '~/contexts/StandaloneModeProvider';
 
 export type PageMetaProps = {
@@ -16,7 +17,7 @@ export type PageMetaProps = {
   author?: string;
 };
 
-const DEFAULT_DESCRIPTION = 'A decentralized social network';
+const DEFAULT_DESCRIPTION = APP_DESCRIPTION;
 
 const PageMeta: FC<PageMetaProps> = memo(
   ({
@@ -42,14 +43,15 @@ const PageMeta: FC<PageMetaProps> = memo(
       }
     }, [clearAppBadge, notificationsCount, setAppBadge]);
 
+    const documentTitle = clientDocumentTitle(title);
     const faviconPath =
       typeof notificationsCount !== 'undefined' && notificationsCount !== 0
-        ? '/favicon-notifications-v3.png'
-        : '/favicon-v3.png';
+        ? '/brand/favicon-badge.png'
+        : '/brand/favicon.png';
 
     return (
       <Helmet>
-        <title>{title}</title>
+        <title>{documentTitle}</title>
         <link rel="icon" href={faviconPath} />
 
         {/* Standard meta tags */}
@@ -58,7 +60,7 @@ const PageMeta: FC<PageMetaProps> = memo(
 
         {/* Open Graph */}
         <meta property="og:locale" content="en_US" />
-        <meta property="og:title" content={title} />
+        <meta property="og:title" content={documentTitle} />
         {description && (
           <meta property="og:description" content={description} />
         )}
@@ -71,11 +73,11 @@ const PageMeta: FC<PageMetaProps> = memo(
         )}
         <meta property="og:type" content={ogType} />
         {canonical && <meta property="og:url" content={canonical} />}
-        <meta property="og:site_name" content="Farcaster" />
+        <meta property="og:site_name" content={APP_NAME} />
 
         {/* Twitter Card */}
         <meta name="twitter:card" content={twitterCard} />
-        <meta name="twitter:title" content={title} />
+        <meta name="twitter:title" content={documentTitle} />
         {description && (
           <meta name="twitter:description" content={description} />
         )}

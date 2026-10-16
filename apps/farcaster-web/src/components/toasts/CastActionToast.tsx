@@ -19,7 +19,7 @@ const CastActionToast: FC<CastActionToastProps> = ({
   const content = (
     <div className="relative mb-1 flex flex-col rounded-lg border p-4 bg-cast-action-toast border-default">
       <div className="flex flex-row items-center justify-center text-default">
-        <span className="mr-4 text-[#8a63d2]">
+        <span className="mr-4 text-[#E10600]">
           <CastActionIcon iconName={iconName} size={18} />
         </span>
         <div className={classNames('line-clamp-2', link && 'hover:underline')}>

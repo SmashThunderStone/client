@@ -256,7 +256,7 @@ const DirectCastsConversationPageHeader: React.FC<
       )}
       {shouldDisplayPinnedMessages &&
         typeof conversationPinnedMessage !== 'undefined' && (
-          <div className="flex flex-row border-t bg-[#f3f3f3] px-4 py-2 border-default dark:bg-[#302636]">
+          <div className="flex flex-row border-t bg-[#f3f3f3] px-4 py-2 border-default dark:bg-[#1A1A1A]">
             <div className="flex grow flex-col">
               <div className="text-sm font-semibold text-direct-casts-username">
                 {replyDirectCastDisplayName}

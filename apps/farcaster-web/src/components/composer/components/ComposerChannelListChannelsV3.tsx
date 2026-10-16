@@ -56,7 +56,7 @@ const ComposerChannelListChannelsV3: React.FC<
         <SearchIcon className={'absolute left-[12px] top-[8px] text-faint'} />
         <TextInput
           className={
-            '!outline-hidden h-9 !rounded-lg !bg-[#f3f3f3] !px-9 dark:!bg-[#342942]'
+            '!outline-hidden h-9 !rounded-lg !bg-[#f3f3f3] !px-9 dark:!bg-[#1A1A1A]'
           }
           autoFocus
           value={query}
@@ -265,7 +265,7 @@ function makeRenderItem(
         className={classNames(
           'flex w-full flex-row items-center justify-between rounded-lg border-0 bg-transparent px-2 py-3 text-left',
           item.canCast
-            ? 'cursor-pointer hover:bg-[#f3f3f3] dark:hover:bg-[#342942]'
+            ? 'cursor-pointer hover:bg-[#f3f3f3] dark:hover:bg-[#1A1A1A]'
             : 'pointer-events-none cursor-default',
         )}
         disabled={!item.canCast}
@@ -289,11 +289,11 @@ function makeRenderItem(
           )}
         >
           {noChannelSelectorRow ? (
-            <div className="flex size-[40px] min-w-0 shrink-0 items-center justify-center rounded-full bg-[#EDE8F8]">
+            <div className="flex size-[40px] min-w-0 shrink-0 items-center justify-center rounded-full bg-[#FFE8E6]">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                 <path
                   d="M12.9705 2.59061C12.4107 2.11563 11.5893 2.11563 11.0295 2.59061L3.52953 8.95425C3.19364 9.23925 3 9.6575 3 10.098V19.5008C3 20.3292 3.67157 21.0008 4.5 21.0008H9.25C9.66421 21.0008 10 20.665 10 20.2508V14.0008H14V20.2508C14 20.665 14.3358 21.0008 14.75 21.0008H19.5C20.3284 21.0008 21 20.3292 21 19.5008V10.098C21 9.6575 20.8064 9.23925 20.4705 8.95425L12.9705 2.59061Z"
-                  fill="#7C65C1"
+                  fill="#E10600"
                 />
               </svg>
             </div>

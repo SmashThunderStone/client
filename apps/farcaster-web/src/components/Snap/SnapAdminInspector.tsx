@@ -374,7 +374,7 @@ export function SnapAdminInspector({
               <div className="flex items-start gap-4 border-b p-4 border-default">
                 {buildId ? (
                   <div className="mt-1 flex size-8 shrink-0 items-center justify-center text-default">
-                    <Logo size="sm" fill="#6A3CFF" />
+                    <Logo size="sm" />
                   </div>
                 ) : null}
                 <div className="min-w-0 flex-1">

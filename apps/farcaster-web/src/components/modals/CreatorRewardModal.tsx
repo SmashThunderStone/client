@@ -44,7 +44,7 @@ const CreatorRewardModal: FC<CreatorRewardModalProps> = ({
           <Dialog.Content className="focus:outline-hidden fixed left-1/2 top-1/2 z-20 max-h-[85vh] w-[90vw] max-w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-[6px] py-6 bg-app">
             <div className="flex flex-row items-center justify-between pl-6 pr-4">
               <Dialog.Title className="flex flex-row items-center gap-3">
-                <div className="flex size-[32px] items-center justify-center rounded-full bg-[#7C65C133] dark:bg-[#7C65C14D]">
+                <div className="flex size-[32px] items-center justify-center rounded-full bg-[#E1060033] dark:bg-[#E106004D]">
                   <GiftIcon size={18} className="text-action-purple" />
                 </div>
                 <div className="text-xl font-semibold">Top Creator Reward</div>

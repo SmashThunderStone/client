@@ -51,13 +51,13 @@ const TokenIcon: React.FC<TokenIconProps> = ({
         >
           {symbol && symbol !== '[invalid]' ? (
             <span
-              className={`font-semibold text-[#7959ff] dark:text-[#866aff] ${getTextSize()}`}
+              className={`font-semibold text-[#E10600] dark:text-[#FF4D42] ${getTextSize()}`}
             >
               {symbol[0]?.toUpperCase()}
             </span>
           ) : (
             <span
-              className={`text-[#7959ff] dark:text-[#866aff] ${getTextSize()}`}
+              className={`text-[#E10600] dark:text-[#FF4D42] ${getTextSize()}`}
             >
               ?
             </span>

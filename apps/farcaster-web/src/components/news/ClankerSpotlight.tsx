@@ -151,7 +151,7 @@ function ClankerSpotlight(_: ClankerSpotlightProps) {
 
   return (
     <Clickable disabled={false} onClick={onBannerClick}>
-      <div className="w-max max-w-[393px] overflow-hidden rounded-xl border border-[#F8F6FF] bg-[#F8F6FF] dark:border-[#231A36] dark:bg-[#1B1429]">
+      <div className="w-max max-w-[393px] overflow-hidden rounded-xl border border-[#FFF1F0] bg-[#FFF1F0] dark:border-[#1A1010] dark:bg-[#140606]">
         <div className="relative flex flex-col justify-start space-y-[12px] p-3">
           <div className="flex flex-col space-y-[4px]">
             <div className="flex flex-row items-center gap-1">

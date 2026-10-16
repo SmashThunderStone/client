@@ -1864,7 +1864,7 @@ function MiniAppHeader({
         sideOffset={21}
         align="end"
         alignOffset={-15}
-        className="z-20 w-52 divide-y divide-[#efefef] overflow-hidden rounded-xl border shadow-xl bg-app border-default dark:divide-[#4c3a4e80]"
+        className="z-20 w-52 divide-y divide-[#efefef] overflow-hidden rounded-xl border shadow-xl bg-app border-default dark:divide-[#2A2A2A80]"
         onClick={(e) => e.stopPropagation()}
         onCloseAutoFocus={(e) => e.preventDefault()}
       >
@@ -1912,7 +1912,7 @@ function MiniAppHeader({
             <DropdownMenu.Portal>
               <DropdownMenu.SubContent
                 sideOffset={4}
-                className="z-30 w-52 divide-y divide-[#efefef] overflow-hidden rounded-xl border shadow-xl bg-app border-default dark:divide-[#4c3a4e80]"
+                className="z-30 w-52 divide-y divide-[#efefef] overflow-hidden rounded-xl border shadow-xl bg-app border-default dark:divide-[#2A2A2A80]"
                 onClick={(e) => e.stopPropagation()}
               >
                 {showInAppNotificationSettings && (

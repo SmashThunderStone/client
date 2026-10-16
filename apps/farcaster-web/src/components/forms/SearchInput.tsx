@@ -113,7 +113,7 @@ const SearchInput = memo(
               placeholder={placeholder ?? 'Search casts, channels and users'}
               className={cn(
                 variant === 'muted'
-                  ? 'bg-[#F3F3F3] dark:bg-[#342942]'
+                  ? 'bg-[#F3F3F3] dark:bg-[#1A1A1A]'
                   : 'bg-input',
                 'outline-hidden w-full rounded-full border py-2 text-sm text-default',
                 inputPadding,

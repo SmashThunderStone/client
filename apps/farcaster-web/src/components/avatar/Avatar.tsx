@@ -201,14 +201,14 @@ const AvatarFollowUser: FC<{
             e.preventDefault();
           }}
           className={cn(
-            'absolute bottom-0 right-0 mb-[-4px] mr-[-4px] flex h-[20px] w-[20px] items-center justify-center rounded-full border-[2px] bg-[#E2D8F4] hover:bg-[#c1a9df]',
+            'absolute bottom-0 right-0 mb-[-4px] mr-[-4px] flex h-[20px] w-[20px] items-center justify-center rounded-full border-[2px] bg-[#FFE8E6] hover:bg-[#FFC9C4]',
             isHighlighted
-              ? 'border-[#F5F4FF] dark:border-[#1F182C]'
+              ? 'border-[#FFF1F0] dark:border-[#1A1010]'
               : 'border-app',
           )}
         >
           <PlusIcon
-            className="text-[#8A63D2]"
+            className="text-[#E10600]"
             size={12.5}
             verticalAlign="top"
           />

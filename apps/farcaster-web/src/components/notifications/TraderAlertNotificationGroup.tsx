@@ -136,7 +136,7 @@ const TraderAlertNotificationGroup: FC<TraderAlertNotificationGroupProps> =
               />
             ) : (
               <div
-                className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900"
+                className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center rounded-full bg-[#FFF1F0] dark:bg-[#3D1010]"
                 style={{
                   width: 20,
                   height: 20,

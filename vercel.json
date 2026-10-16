@@ -1,0 +1,17 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "HUSKY=0 COREPACK_ENABLE_DOWNLOAD_PROMPT=0 corepack enable && corepack prepare pnpm@10.8.1 --activate && pnpm install",
+  "buildCommand": "pnpm build:web",
+  "outputDirectory": "apps/farcaster-web/dist",
+  "framework": null,
+  "rewrites": [
+    {
+      "source": "/fc-api/:path*",
+      "destination": "https://client.farcaster.xyz/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

@@ -71,7 +71,7 @@ const LoginMagicLinkWithInstructions: FC<LoginMagicLinkWithInstructionsProps> =
             </div>
             <div
               onClick={login}
-              className="flex w-full items-center justify-center rounded-[300px] bg-[#7959FF] px-[36px] py-[10px] "
+              className="flex w-full items-center justify-center rounded-[300px] bg-[var(--smashcast-red)] px-[36px] py-[10px] hover:bg-[var(--smashcast-red-hover)] "
             >
               <div className="text-[16px] text-light">
                 {(success && 'Resend email') || 'Send email'}

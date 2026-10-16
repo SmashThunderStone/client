@@ -7,7 +7,7 @@ const neutrals = {
   },
   dark: {
     white: '#ffffff',
-    black: '#101010',
+    black: '#0a0a0a',
   },
 };
 
@@ -48,30 +48,33 @@ const gray = {
   },
 };
 
+// SmashCast red. The keys stay named "violet" because existing utilities
+// (text-action-purple, bg-light-purple, text-brand) read this scale.
+// 500 is the accent: #E10600 on white, #FF4D42 for text on black.
 const violet = {
   light: {
-    violet100: '#fbfaff',
-    violet200: '#f8f6ff',
-    violet300: '#eee9ff',
-    violet400: '#ddd4ff',
-    violet500: '#7959ff',
-    violet600: '#6c4fec',
-    violet700: '#5d42d6',
-    violet800: '#4a33ad',
-    violet900: '#39257f',
-    violet1000: '#271955',
+    violet100: '#fff6f5',
+    violet200: '#ffe8e6',
+    violet300: '#ffc9c4',
+    violet400: '#ff8d86',
+    violet500: '#e10600',
+    violet600: '#c10500',
+    violet700: '#9e0400',
+    violet800: '#7a0300',
+    violet900: '#4a0200',
+    violet1000: '#2a0100',
   },
   dark: {
-    violet100: '#171320',
-    violet200: '#1b1429',
-    violet300: '#231a36',
-    violet400: '#2f204a',
-    violet500: '#866aff',
-    violet600: '#9a81ff',
-    violet700: '#b29eff',
-    violet800: '#cabfff',
-    violet900: '#e0d8ff',
-    violet1000: '#f2f0ff',
+    violet100: '#140606',
+    violet200: '#1c0808',
+    violet300: '#2a0c0c',
+    violet400: '#3d1010',
+    violet500: '#ff4d42',
+    violet600: '#ff6b62',
+    violet700: '#ff8a84',
+    violet800: '#ffb0ac',
+    violet900: '#ffd4d1',
+    violet1000: '#fff0ef',
   },
 };
 
@@ -499,7 +502,7 @@ module.exports = {
         },
         ['border-gray']: {
           light: '#d0d1d259',
-          dark: '#4c3a4ec0',
+          dark: '#2a2a2a',
         },
         // Map shadcn semantic tokens to your existing system
         background: {
@@ -706,10 +709,12 @@ module.exports = {
         }),
         ...bgColor({
           name: 'action-primary',
-          light: text.light.brand,
-          dark: text.dark.brand,
-          lightHover: violet.light.violet700,
-          darkHover: violet.dark.violet300,
+          // Filled buttons stay on #E10600 in both themes so white label text
+          // keeps a 4.9:1 contrast. Dark-mode link text uses the lighter red.
+          light: '#E10600',
+          dark: '#E10600',
+          lightHover: '#B40500',
+          darkHover: '#B40500',
         }),
         ...bgColor({
           name: 'action-primary-disabled',
@@ -730,19 +735,19 @@ module.exports = {
         ...bgColor({
           name: 'elevated-nohover',
           light: '#f3f3f3',
-          dark: '#342942',
+          dark: '#1a1a1a',
         }),
         ...bgColor({
           name: 'elevated',
           light: '#f3f3f3',
-          dark: '#342942',
+          dark: '#1a1a1a',
           lightHover: '#e0e0e0',
-          darkHover: '#4a3a5b',
+          darkHover: '#2a2a2a',
         }),
         ...bgColor({
           name: 'hover',
           light: '#EFEFEF',
-          dark: '#4c3a4e',
+          dark: '#242424',
         }),
         ...bgColor({
           name: 'notification-purple',
@@ -903,7 +908,7 @@ module.exports = {
         ...bgColor({
           name: 'toggle-inactive',
           light: '#d0d1d259',
-          dark: '#4c3a4ec0',
+          dark: '#2a2a2a',
         }),
         ...bgColor({
           name: 'cast-action-toast',
@@ -1258,7 +1263,7 @@ module.exports = {
         ...strokeColor({
           name: 'border',
           light: '#d0d1d259',
-          dark: '#4c3a4ec0',
+          dark: '#2a2a2a',
         }),
         ...strokeColor({
           name: 'starter-pack-icon',

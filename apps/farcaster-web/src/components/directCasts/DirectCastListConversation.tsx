@@ -470,7 +470,7 @@ const DirectCastListConversationInner: FC<{
                       variant="condensed"
                     />
                     {typeof conversation.viewerContext.tag !== 'undefined' && (
-                      <div className="rounded-10 w-max border bg-[#F3F3F3] px-2 py-1 text-xs border-default text-default dark:bg-[#302636]">
+                      <div className="rounded-10 w-max border bg-[#F3F3F3] px-2 py-1 text-xs border-default text-default dark:bg-[#1A1A1A]">
                         {conversation.viewerContext.tag === 'automated' &&
                           'Automated'}
                         {conversation.viewerContext.tag === 'new-user' &&

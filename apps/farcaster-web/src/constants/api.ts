@@ -18,13 +18,24 @@ function isLocalApiEnabled(): boolean {
 
 const useLocalApi = isLocalApiEnabled();
 
+// Production builds set this to a same-origin path (`/fc-api`). Vercel
+// rewrites `/fc-api/*` to `https://client.farcaster.xyz/*`. Local dev leaves
+// it unset, so the client keeps calling `https://farcaster.xyz/~api`.
+const configuredApiBase = (import.meta.env.VITE_FC_API_BASE || '').replace(
+  /\/$/,
+  '',
+);
+
 const baseApiHost = useLocalApi ? 'localhost:8080' : 'farcaster.xyz/~api';
 
 const baseUseHttps = !useLocalApi;
 
-const baseApiUrl = baseUseHttps
+const defaultApiUrl = baseUseHttps
   ? `https://${baseApiHost}`
   : `http://${baseApiHost}`;
+
+const baseApiUrl =
+  !useLocalApi && configuredApiBase ? configuredApiBase : defaultApiUrl;
 
 const wsUrl = useLocalApi
   ? `ws://${baseApiHost}/stream`
