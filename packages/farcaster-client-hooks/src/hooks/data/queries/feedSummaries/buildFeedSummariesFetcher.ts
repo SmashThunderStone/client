@@ -1,5 +1,6 @@
 import { ApiChannel, FarcasterApiClient } from 'farcaster-client-data';
 
+import { protocolReplacesHostedAuth } from '../../../../protocol/runtime';
 import { BatchMergeIntoGloballyCachedChannels } from '../../../../types';
 
 const buildFeedSummariesFetcher =
@@ -13,6 +14,9 @@ const buildFeedSummariesFetcher =
     onFeedSummariesFetched?: (summaries: ApiChannel[]) => void;
   }) =>
   async () => {
+    if (protocolReplacesHostedAuth(apiClient)) {
+      return [];
+    }
     const response = await apiClient.getFeedSummaries();
 
     batchMergeIntoGloballyCachedChannels({

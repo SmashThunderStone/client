@@ -1,5 +1,6 @@
 import { FarcasterApiClient } from 'farcaster-client-data';
 
+import { protocolReplacesHostedAuth } from '../../../../protocol/runtime';
 import { BatchMergeIntoGloballyCachedUsers } from '../../../../types';
 import { wrapPaginatedFetcher } from '../../helpers';
 
@@ -15,6 +16,9 @@ const buildFollowersYouKnowFetcher = ({
   limit: number;
 }) =>
   wrapPaginatedFetcher(async ({ pageParam: cursor }) => {
+    if (protocolReplacesHostedAuth(apiClient)) {
+      return { result: { users: [], totalCount: 0 } };
+    }
     const response = await apiClient.getFollowersYouKnow({
       cursor,
       fid: fid,

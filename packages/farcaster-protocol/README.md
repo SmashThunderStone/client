@@ -26,4 +26,6 @@ This costs no gas. It is not proven with a real custody signature in this repo, 
 
 If the node rejects the gasless message, the app falls back to `KeyGateway.add` on OP Mainnet (`0x00000000fc56947c7e7183f8ca4b62398caadf0b`). That signature uses domain `Farcaster SignedKeyRequestValidator` (chainId 10, the validator contract). The user pays OP gas. A direct add is an L2 transaction; at the 16 Oct 2026 base fee (~0.001 gwei) the execution cost is a fraction of a cent, and the L1 data fee is the part that moves (historically well under a dollar, often cents). New FID registration and storage rent are not part of this path. `addFor` (a relayer paying gas) is not used.
 
+The home feed, when SmashCast is signed in with a wallet and has no hosted token, is the user's own casts plus `castsByFid` for the first page of follows (`linksByFid`, 24 accounts, 4 casts each), merged newest-first.
+
 The Ed25519 seed stays in the web app's IndexedDB. `@farcaster/core`'s `NobleEd25519Signer` needs the raw seed, so the key cannot be a non-extractable WebCrypto key. The app never offers an export and deletes the record on sign-out.

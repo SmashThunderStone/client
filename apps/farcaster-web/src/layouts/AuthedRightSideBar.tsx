@@ -1,5 +1,6 @@
 import { FC, memo, Suspense, useMemo } from 'react';
 
+import { ProtocolQuietBoundary } from '~/components/errors/ProtocolQuietBoundary';
 import {
   MinimizableWindowHost,
   MinimizableWindowHostVariant,
@@ -34,16 +35,22 @@ const AuthedRightSideBar: FC = memo(() => {
     return (
       <>
         <RightSideBar as="div">
-          {routeFamily === 'search' ? <></> : <Search showClearIcon={false} />}
-          {routeFamily !== 'profile' && routeFamily !== 'news' && (
-            <Suspense>
-              <ClankerSpotlight />
-            </Suspense>
-          )}
-          <MiniApps />
-          {routeName === 'homeFeed' && <LiveNowSpaces />}
-          <TrendingTopics />
-          <SupportAndTermsLinks />
+          <ProtocolQuietBoundary>
+            {routeFamily === 'search' ? (
+              <></>
+            ) : (
+              <Search showClearIcon={false} />
+            )}
+            {routeFamily !== 'profile' && routeFamily !== 'news' && (
+              <Suspense>
+                <ClankerSpotlight />
+              </Suspense>
+            )}
+            <MiniApps />
+            {routeName === 'homeFeed' && <LiveNowSpaces />}
+            <TrendingTopics />
+            <SupportAndTermsLinks />
+          </ProtocolQuietBoundary>
         </RightSideBar>
       </>
     );

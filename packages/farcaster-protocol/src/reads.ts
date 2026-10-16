@@ -247,6 +247,165 @@ async function countMessages(
   return { count, partial: true };
 }
 
+const FEED_FOLLOW_CAP = 24;
+const FEED_CASTS_PER_FID = 4;
+const FEED_CACHE_MS = 60_000;
+const THREAD_SCAN_PAGES = 4;
+
+type FeedCache = {
+  fid: number;
+  at: number;
+  casts: HubCast[];
+};
+
+let feedCache: FeedCache | null = null;
+
+function fidsFromLinks(page: MessagePage): number[] {
+  const fids: number[] = [];
+  for (const message of page.messages ?? []) {
+    const target = message.data?.linkBody?.targetFid;
+    if (typeof target === 'number') {
+      fids.push(target);
+    }
+  }
+  return fids;
+}
+
+async function followedFids(
+  hub: SnapchainHub,
+  fid: number,
+  limit: number,
+): Promise<number[]> {
+  const base = `/v1/linksByFid?fid=${fid}&link_type=follow&pageSize=${limit}`;
+  try {
+    return fidsFromLinks(
+      await hub.getJson<MessagePage>(`${base}&reverse=true`),
+    );
+  } catch {
+    return fidsFromLinks(await hub.getJson<MessagePage>(base));
+  }
+}
+
+function messageToCast(message: HubMessage): HubCast | null {
+  if (message.data?.type !== 'MESSAGE_TYPE_CAST_ADD') {
+    return null;
+  }
+  const body = message.data.castAddBody;
+  const fid = message.data.fid;
+  if (!message.hash || typeof message.data.timestamp !== 'number' || !fid) {
+    return null;
+  }
+  const parent = body?.parentCastId?.fid
+    ? {
+        fid: body.parentCastId.fid,
+        hash: body.parentCastId.hash || '',
+      }
+    : undefined;
+  return {
+    hash: message.hash,
+    fid,
+    text: body?.text || '',
+    timestampMs: unwrap(fromFarcasterTime(message.data.timestamp), 'cast time'),
+    parent,
+  };
+}
+
+/**
+ * Recent casts from the user and a capped slice of accounts they follow,
+ * newest first. One page of follows is enough to keep the hub fan-out small.
+ */
+export async function getChronologicalFeed(
+  hubUrl: string,
+  fid: number,
+): Promise<HubCast[]> {
+  if (
+    feedCache &&
+    feedCache.fid === fid &&
+    Date.now() - feedCache.at < FEED_CACHE_MS
+  ) {
+    return feedCache.casts;
+  }
+  const hub = new SnapchainHub(hubUrl);
+  const followed = await followedFids(hub, fid, FEED_FOLLOW_CAP);
+  const fids = [fid, ...followed.filter((id) => id !== fid)];
+  const pages = await mapPool(fids, 6, (id) =>
+    getCastsByFid(hubUrl, id, {
+      pageSize: FEED_CASTS_PER_FID,
+      replies: 'exclude',
+    }).catch(() => ({ casts: [] as HubCast[] })),
+  );
+  const casts = pages
+    .flatMap((page) => page.casts)
+    .sort((a, b) => b.timestampMs - a.timestampMs);
+  feedCache = { fid, at: Date.now(), casts };
+  return casts;
+}
+
+export function selectFeedCasts(
+  casts: HubCast[],
+  options: { excludePrefixes?: string[]; limit: number },
+): HubCast[] {
+  const excluded = new Set(
+    (options.excludePrefixes ?? []).map((prefix) => prefix.toLowerCase()),
+  );
+  const selected: HubCast[] = [];
+  for (const cast of casts) {
+    const prefix = cast.hash.slice(2, 10).toLowerCase();
+    if (excluded.has(prefix)) {
+      continue;
+    }
+    selected.push(cast);
+    if (selected.length >= options.limit) {
+      break;
+    }
+  }
+  return selected;
+}
+
+export async function getThreadByUsername(
+  hubUrl: string,
+  username: string,
+  hashPrefix: string,
+): Promise<{ author: HubProfile; casts: HubCast[] } | null> {
+  const author = await getProfileByUsername(hubUrl, username);
+  if (!author) {
+    return null;
+  }
+  const hub = new SnapchainHub(hubUrl);
+  const prefix = hashPrefix.toLowerCase();
+  let pageToken: string | undefined;
+  let root: HubCast | undefined;
+  for (let page = 0; page < THREAD_SCAN_PAGES && !root; page += 1) {
+    const casts = await getCastsByFid(hubUrl, author.fid, {
+      pageToken,
+      pageSize: 50,
+      replies: 'include',
+    });
+    root = casts.casts.find((cast) =>
+      cast.hash.toLowerCase().startsWith(prefix),
+    );
+    pageToken = casts.nextPageToken;
+    if (!pageToken) {
+      break;
+    }
+  }
+  if (!root) {
+    return null;
+  }
+  let replies: HubCast[] = [];
+  try {
+    const parent = await hub.getJson<MessagePage>(
+      `/v1/castsByParent?fid=${root.fid}&hash=${encodeURIComponent(root.hash)}&pageSize=20&reverse=true`,
+    );
+    replies = (parent.messages ?? [])
+      .map(messageToCast)
+      .filter((cast): cast is HubCast => cast !== null);
+  } catch {
+    replies = [];
+  }
+  return { author, casts: [root, ...replies] };
+}
+
 async function mapPool<T, R>(
   items: T[],
   limit: number,

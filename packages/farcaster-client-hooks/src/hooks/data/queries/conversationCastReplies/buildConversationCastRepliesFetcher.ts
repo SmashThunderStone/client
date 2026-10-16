@@ -1,5 +1,6 @@
 import { FarcasterApiClient } from 'farcaster-client-data';
 
+import { protocolReplacesHostedAuth } from '../../../../protocol/runtime';
 import { BatchMergeIntoGloballyCachedCasts } from '../../../../types';
 
 const PAGE_SIZE = 15;
@@ -32,6 +33,13 @@ export const buildConversationCastRepliesFetcher =
     batchMergeIntoGloballyCachedCasts: BatchMergeIntoGloballyCachedCasts;
   }) =>
   async () => {
+    if (protocolReplacesHostedAuth(apiClient)) {
+      const fetchState = fetchStates.current[focusedCastHash]?.[parentCastHash];
+      if (fetchState) {
+        fetchState.noMoreReplies = true;
+      }
+      return { parentCastHash, page, casts: [] };
+    }
     const thisFetchStates = fetchStates.current[focusedCastHash];
     const fetchState = thisFetchStates[parentCastHash];
     const excludeReplyHashes = fetchState.excludeReplyHashes;

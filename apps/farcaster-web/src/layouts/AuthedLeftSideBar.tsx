@@ -14,6 +14,7 @@ import {
 import React from 'react';
 
 import { AvatarImage } from '~/components/avatar/AvatarImage';
+import { ProtocolQuietBoundary } from '~/components/errors/ProtocolQuietBoundary';
 import { NavLink } from '~/components/links/NavLink';
 import { NavLinkBadge } from '~/components/links/NavLinkBadge';
 import { NavLinkIcon } from '~/components/links/NavLinkIcon';
@@ -175,7 +176,9 @@ const AuthedLeftSideBar: React.FC = React.memo(() => {
           <NavLinkLabel>Profile</NavLinkLabel>
         </NavLink>
         <div className="hidden xl:contents">
-          <ChannelNavLinks />
+          <ProtocolQuietBoundary>
+            <ChannelNavLinks />
+          </ProtocolQuietBoundary>
         </div>
       </div>
     </LeftSideBar>

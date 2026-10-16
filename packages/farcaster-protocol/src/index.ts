@@ -31,10 +31,13 @@ export {
 export type { HubCast, HubProfile } from './reads';
 export {
   getCastsByFid,
+  getChronologicalFeed,
   getFollowingPage,
   getLightProfile,
   getProfileByFid,
   getProfileByUsername,
+  getThreadByUsername,
+  selectFeedCasts,
 } from './reads';
 export {
   buildGaslessKeyAddMessage,

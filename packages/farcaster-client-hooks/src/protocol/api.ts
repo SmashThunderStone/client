@@ -1,5 +1,7 @@
 import {
   ApiCast,
+  ApiCastFeedItem,
+  ApiChannel,
   ApiCreateCast201Response,
   ApiCreateCastLike200Response,
   ApiCreateFollow200Response,
@@ -7,9 +9,13 @@ import {
   ApiDeleteCastLike200Response,
   ApiDeleteFollow200Response,
   ApiDeleteRecast200Response,
+  ApiGetFeedItems200Response,
   ApiGetFollowing200Response,
+  ApiGetUserAppContext200Response,
   ApiGetUserByUsername200Response,
   ApiGetUserCasts200Response,
+  ApiGetUserPreferences200Response,
+  ApiGetUserThreadCasts200Response,
   ApiUser,
 } from 'farcaster-client-data';
 import {
@@ -18,15 +24,19 @@ import {
   buildReaction,
   castReadBackPath,
   getCastsByFid,
+  getChronologicalFeed,
   getFollowingPage,
   getLightProfile,
+  getProfileByFid,
   getProfileByUsername,
+  getThreadByUsername,
   HubCast,
   HubProfile,
   linkReadBackPath,
   messageHash,
   publishMessage,
   reactionReadBackPath,
+  selectFeedCasts,
 } from 'farcaster-protocol';
 
 import { protocolHubUrl, ProtocolSession, protocolSession } from './runtime';
@@ -263,6 +273,176 @@ export function protocolRemoved(): ApiDeleteCastLike200Response &
     result: {
       success: true,
       userAppContext: { canAddLinks: true },
+    },
+  };
+}
+
+export function protocolUserPreferences(): ApiGetUserPreferences200Response {
+  return {
+    result: {
+      preferences: {
+        defaultFeed: 'home',
+        replyFilterLevel: 'medium',
+        expandFavoriteFeeds: true,
+        expandActiveFeeds: true,
+        expandAllFeeds: true,
+      },
+    },
+  };
+}
+
+export function protocolUserAppContext(): ApiGetUserAppContext200Response['result']['context'] {
+  return {
+    canAddLinks: true,
+    showConnectedApps: false,
+    signerRequestsEnabled: false,
+    prompts: [],
+    castActions: [],
+    canAddCastAction: false,
+    regularCastByteLimit: 320,
+    longCastByteLimit: 320,
+    castEmbedLimit: 2,
+  };
+}
+
+export function protocolChannelPlaceholder(key: string): ApiChannel {
+  return {
+    type: 'channel',
+    key,
+    name: key,
+    description: 'Channels are not available in SmashCast direct mode.',
+    showCastSourceLabels: false,
+    showCastTags: false,
+    sectionRank: 0,
+    subscribable: false,
+    viewerContext: {
+      following: false,
+      isMember: false,
+      hasUnseenItems: false,
+      canCast: false,
+    },
+  };
+}
+
+export async function protocolUserByFid(
+  fid: number,
+): Promise<ApiGetUserByUsername200Response | null> {
+  const hubUrl = protocolHubUrl();
+  if (!hubUrl) {
+    return null;
+  }
+  const profile = await getProfileByFid(hubUrl, fid);
+  return {
+    result: {
+      user: hubProfileToApiUser(profile),
+      collectionsOwned: [],
+      extras: {
+        fid: profile.fid,
+        custodyAddress: profile.custodyAddress || '',
+      },
+    },
+  };
+}
+
+export async function protocolHomeFeed(params: {
+  fid: number;
+  excludePrefixes?: string[];
+}): Promise<ApiGetFeedItems200Response> {
+  const hubUrl = protocolHubUrl();
+  if (!hubUrl) {
+    return { result: { items: [] } };
+  }
+  let all;
+  try {
+    all = await getChronologicalFeed(hubUrl, params.fid);
+  } catch {
+    return { result: { items: [] } };
+  }
+  const page = selectFeedCasts(all, {
+    excludePrefixes: params.excludePrefixes,
+    limit: 20,
+  });
+  const authors = new Map<number, ApiUser>();
+  await Promise.all(
+    [...new Set(page.map((cast) => cast.fid))].map(async (fid) => {
+      const profile = await getLightProfile(hubUrl, fid).catch(() => null);
+      authors.set(
+        fid,
+        profile
+          ? hubProfileToApiUser(profile)
+          : {
+              fid,
+              displayName: `FID ${fid}`,
+              profile: { bio: { text: '', mentions: [] } },
+              followerCount: 0,
+              followingCount: 0,
+            },
+      );
+    }),
+  );
+  const items: ApiCastFeedItem[] = page.map((cast) => ({
+    id: cast.hash,
+    timestamp: cast.timestampMs,
+    cast: hubCastToApiCast(cast, authors.get(cast.fid) as ApiUser),
+    otherParticipants: [],
+  }));
+  return {
+    result: {
+      items,
+      latestMainCastTimestamp: items[0]?.timestamp,
+    },
+  };
+}
+
+export async function protocolThread(params: {
+  username: string;
+  hashPrefix: string;
+}): Promise<ApiGetUserThreadCasts200Response> {
+  const hubUrl = protocolHubUrl();
+  if (!hubUrl) {
+    return { result: { casts: [] } };
+  }
+  const thread = await getThreadByUsername(
+    hubUrl,
+    params.username,
+    params.hashPrefix,
+  );
+  if (!thread) {
+    return { result: { casts: [] } };
+  }
+  const authors = new Map<number, ApiUser>();
+  authors.set(thread.author.fid, hubProfileToApiUser(thread.author));
+  await Promise.all(
+    [...new Set(thread.casts.map((cast) => cast.fid))]
+      .filter((fid) => !authors.has(fid))
+      .map(async (fid) => {
+        const profile = await getLightProfile(hubUrl, fid).catch(() => null);
+        authors.set(
+          fid,
+          profile
+            ? hubProfileToApiUser(profile)
+            : {
+                fid,
+                displayName: `FID ${fid}`,
+                profile: { bio: { text: '', mentions: [] } },
+                followerCount: 0,
+                followingCount: 0,
+              },
+        );
+      }),
+  );
+  return {
+    result: {
+      casts: thread.casts.map((cast) => {
+        const apiCast = hubCastToApiCast(
+          cast,
+          authors.get(cast.fid) as ApiUser,
+        );
+        if (cast.hash === thread.casts[0]?.hash) {
+          apiCast.replies = { count: 0 };
+        }
+        return apiCast;
+      }),
     },
   };
 }

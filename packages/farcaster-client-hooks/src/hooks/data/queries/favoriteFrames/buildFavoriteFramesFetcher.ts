@@ -4,6 +4,7 @@ import {
   FarcasterApiClient,
 } from 'farcaster-client-data';
 
+import { protocolReplacesHostedAuth } from '../../../../protocol/runtime';
 import { PaginatedResultFetcher } from '../../helpers';
 import { BatchMergeIntoGloballyCachedFrame } from '../frameDetails';
 
@@ -18,6 +19,9 @@ export const buildFavoriteFramesFetcher =
     batchMergeIntoGlobalCache: BatchMergeIntoGloballyCachedFrame;
   }): PaginatedResultFetcher<ApiFrame> =>
   async ({ pageParam: cursor }) => {
+    if (protocolReplacesHostedAuth(apiClient)) {
+      return { items: [], next: undefined };
+    }
     const response = await apiClient.getFavoriteFrames({
       ...params,
       cursor,

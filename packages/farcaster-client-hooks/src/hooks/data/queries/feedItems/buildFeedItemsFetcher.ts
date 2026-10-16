@@ -7,6 +7,8 @@ import {
   TypedGetPreviousPageParamFunction,
 } from 'farcaster-client-data';
 
+import { protocolHomeFeed } from '../../../../protocol/api';
+import { protocolHubUrl, protocolSession } from '../../../../protocol/runtime';
 import { InternalEventingContextValue } from '../../../../providers/InternalEventingProvider';
 import {
   BatchMergeIntoGloballyCachedCasts,
@@ -46,6 +48,21 @@ export const buildFeedItemsFetcher =
     seedCastHash?: string;
   }) =>
   async ({ pageParam }: { pageParam?: FeedItemsPageParam }) => {
+    if (protocolHubUrl() && !apiClient.options.authToken) {
+      const session = protocolSession();
+      if (session && (feedKey === 'home' || feedKey === 'following')) {
+        const page = await protocolHomeFeed({
+          fid: session.fid,
+          excludePrefixes: pageParam?.excludeItemIdPrefixes,
+        });
+        batchUpdateGloballyCachedCast({
+          batchUpdates: page.result.items.map((item) => item.cast),
+        });
+        return page;
+      }
+      return { result: { items: [] } };
+    }
+
     const castViewEvents = internalEventsTracker.getAndRemoveCastViewEvents();
 
     try {

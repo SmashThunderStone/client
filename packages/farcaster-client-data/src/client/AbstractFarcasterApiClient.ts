@@ -273,6 +273,38 @@ abstract class AbstractFarcasterApiClient {
       ...partialHeaders,
       ...identityHeaders,
     };
+    if (headers['x-fc-requires-auth'] === '1') {
+      delete headers['x-fc-requires-auth'];
+      if (
+        this.options.protocolDirectAnonymous &&
+        !this.options.authToken &&
+        !headers.Authorization
+      ) {
+        throw new HandledFetchError(
+          `${endpointName} 401 - Not available in SmashCast direct mode`,
+          {
+            absoluteUrl: url,
+            body,
+            endpointName,
+            error: 'protocol-direct',
+            hasTimedOut: false,
+            isHandled: true,
+            message: 'Not available in SmashCast direct mode',
+            isNetworkError: false,
+            method,
+            relativeUrl,
+            resolvedTimeout: 0,
+            response: undefined,
+            responseData: {
+              errors: [{ message: 'Not available in SmashCast direct mode' }],
+            },
+            status: 401,
+            timeout: 0,
+            isOffline: false,
+          },
+        );
+      }
+    }
     let hasTimedOut = false;
 
     // Decay only applies to requests running on the generic default timeout.
@@ -570,6 +602,10 @@ abstract class AbstractFarcasterApiClient {
 
     if (idempotent && !headers['Idempotency-Key']) {
       headers['Idempotency-Key'] = generateIdempotencyKey();
+    }
+
+    if (this.options.protocolDirectAnonymous && !headers.Authorization) {
+      headers['x-fc-requires-auth'] = '1';
     }
 
     return headers;

@@ -61,6 +61,11 @@ export interface FarcasterApiClientOptions {
   readonly getSessionId?: () => string | undefined;
   readonly timeoutRetryDecayFactor?: number;
   readonly isOffline?: boolean;
+  /**
+   * Wallet sign-in has a protocol session and no hosted auth token.
+   * Authed requests are rejected locally instead of calling the API.
+   */
+  readonly protocolDirectAnonymous?: boolean;
 }
 
 export interface FarcasterApiClientMetaOptions {

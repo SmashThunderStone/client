@@ -10,6 +10,7 @@ import { Page } from '~/components/page/Page';
 import { PageHeader } from '~/components/page/PageHeader';
 import { PageTitle } from '~/components/page/PageTitle';
 import { SettingsPageContent } from '~/components/page/SettingsPageContent';
+import { protocolDirectEnabled } from '~/constants/protocol';
 import { useOnboardingState } from '~/hooks/data/useOnboardingState';
 import { SettingsNav } from '~/layouts/SettingsNav';
 
@@ -35,6 +36,13 @@ const SettingsNotificationsPage = memo(() => {
         <BorderedMainContent className="flex flex-row">
           <SettingsNav />
           <SettingsPageContent>
+            {protocolDirectEnabled && (
+              <p className="mb-4 text-sm opacity-70">
+                SmashCast direct mode keeps your signer in this browser. Hosted
+                notification delivery is not connected. Preference changes stay
+                in this browser.
+              </p>
+            )}
             <NotificationsModeSetting />
             <Divider />
             <GranularInAppNotificationsSection />

@@ -5,6 +5,7 @@ import {
 } from 'farcaster-client-data';
 import { useCallback } from 'react';
 
+import { protocolReplacesHostedAuth } from '../../../protocol/runtime';
 import { useFarcasterApiClient } from '../../../providers/FarcasterApiClientProvider';
 import { buildDraftCaststormsKey } from '../queries/draftCasts/buildDraftCaststormsKey';
 
@@ -21,6 +22,19 @@ const useStoreDraftCaststorm = () => {
       caststorm: ApiCaststormBody;
       scheduledAt?: Date;
     }) => {
+      if (protocolReplacesHostedAuth(apiClient)) {
+        return {
+          result: {
+            draft: {
+              casts: caststorm.casts,
+              parent: caststorm.parent,
+              channelKey: caststorm.channelKey,
+              draftId: caststorm.draftId || `protocol-${Date.now()}`,
+              scheduledAt: scheduledAt ? scheduledAt.getTime() : undefined,
+            },
+          },
+        };
+      }
       const response = await apiClient.storeDraftCaststorm({
         caststorm,
         scheduledAt: scheduledAt ? scheduledAt.getTime() : undefined,

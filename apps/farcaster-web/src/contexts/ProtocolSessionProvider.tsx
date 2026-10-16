@@ -1,8 +1,11 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { getProfileByFid, HubProfile } from 'farcaster-protocol';
+import { useFarcasterApiClient } from 'farcaster-client-hooks';
+import { getLightProfile, HubProfile } from 'farcaster-protocol';
 import {
+  createContext,
   FC,
   ReactNode,
+  useContext,
   useEffect,
   useState,
   useSyncExternalStore,
@@ -26,6 +29,10 @@ type ProtocolSessionProviderProps = {
   children: ReactNode;
 };
 
+const ProtocolHydrationContext = createContext(true);
+
+const useProtocolHydrated = () => useContext(ProtocolHydrationContext);
+
 const ProtocolSessionProvider: FC<ProtocolSessionProviderProps> = ({
   children,
 }) => {
@@ -35,6 +42,7 @@ const ProtocolSessionProvider: FC<ProtocolSessionProviderProps> = ({
     getProtocolSession,
   );
   const { authToken, addSignOutListener } = useAuth();
+  const { apiClient } = useFarcasterApiClient();
   const queryClient = useQueryClient();
   const [hydrated, setHydrated] = useState(false);
 
@@ -59,28 +67,62 @@ const ProtocolSessionProvider: FC<ProtocolSessionProviderProps> = ({
       setHydrated(true);
       return;
     }
-    void loadSigner(address)
-      .then((stored) => {
-        if (cancelled || !stored?.registered) {
+    const restore = async () => {
+      let stored = await loadSigner(address);
+      if (!stored?.registered) {
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        if (cancelled) {
           return;
         }
-        setProtocolSession({
-          fid: stored.fid,
-          address: stored.address,
-          privateKey: signerBytes(stored.privateKeyHex),
-          publicKey: signerBytes(stored.publicKeyHex),
-          displayName: `FID ${stored.fid}`,
-        });
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setHydrated(true);
-        }
+        stored = await loadSigner(address);
+      }
+      if (cancelled || !stored?.registered) {
+        return;
+      }
+      setProtocolSession({
+        fid: stored.fid,
+        address: stored.address,
+        privateKey: signerBytes(stored.privateKeyHex),
+        publicKey: signerBytes(stored.publicKeyHex),
+        displayName: `FID ${stored.fid}`,
       });
+    };
+    void restore().finally(() => {
+      if (cancelled) {
+        return;
+      }
+      const current = getProtocolSession();
+      if (current) {
+        queryClient.setQueryData(
+          ['onboardingState'],
+          onboardingState(
+            {
+              fid: current.fid,
+              username: current.username,
+              displayName: current.displayName,
+              bio: '',
+              pfpUrl: current.pfpUrl,
+              followerCount: 0,
+              followingCount: 0,
+              countsPartial: false,
+            },
+            current.address,
+          ),
+        );
+      }
+      setHydrated(true);
+    });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [queryClient]);
+
+  useEffect(() => {
+    apiClient.updateOptions({
+      protocolDirectAnonymous:
+        protocolDirectEnabled && Boolean(session) && !authToken,
+    });
+  }, [apiClient, authToken, session]);
 
   useEffect(() => {
     if (!protocolDirectEnabled || !hydrated || authToken) {
@@ -90,8 +132,24 @@ const ProtocolSessionProvider: FC<ProtocolSessionProviderProps> = ({
       queryClient.removeQueries({ queryKey: ['onboardingState'] });
       return;
     }
+    queryClient.setQueryData(
+      ['onboardingState'],
+      onboardingState(
+        {
+          fid: session.fid,
+          username: session.username,
+          displayName: session.displayName,
+          bio: '',
+          pfpUrl: session.pfpUrl,
+          followerCount: 0,
+          followingCount: 0,
+          countsPartial: false,
+        },
+        session.address,
+      ),
+    );
     let cancelled = false;
-    void getProfileByFid(snapHubUrl, session.fid)
+    void getLightProfile(snapHubUrl, session.fid)
       .then((profile) => {
         if (cancelled) {
           return;
@@ -134,7 +192,13 @@ const ProtocolSessionProvider: FC<ProtocolSessionProviderProps> = ({
     };
   }, [authToken, hydrated, queryClient, session]);
 
-  return children;
+  return (
+    <ProtocolHydrationContext.Provider
+      value={!protocolDirectEnabled || hydrated}
+    >
+      {children}
+    </ProtocolHydrationContext.Provider>
+  );
 };
 
 function onboardingState(profile: HubProfile, address: string) {
@@ -175,4 +239,4 @@ function onboardingState(profile: HubProfile, address: string) {
 
 ProtocolSessionProvider.displayName = 'ProtocolSessionProvider';
 
-export { ProtocolSessionProvider };
+export { ProtocolSessionProvider, useProtocolHydrated };
