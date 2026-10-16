@@ -8,8 +8,10 @@ import {
   absoluteAppsRoot,
   absoluteClientDataRoot,
   absoluteClientHooksRoot,
+  absoluteFarcasterAnalyticsRoot,
   absoluteFarcasterCryptographyReactNativeRoot,
   absoluteFarcasterCryptographyRoot,
+  absoluteFarcasterCryptographyWebRoot,
   absoluteFarcasterExpoRoot,
   absolutePackagesRoot,
 } from './config';
@@ -80,6 +82,26 @@ function run(command: string, options: ExecSyncOptions & RequiredCwdOption) {
   return execSync(command, { stdio: 'inherit', ...options });
 }
 
+function publishFarcasterAnalytics() {
+  try {
+    run(`pnpm build`, {
+      cwd: absoluteFarcasterAnalyticsRoot,
+    });
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+function publishFarcasterCryptographyWeb() {
+  try {
+    run(`pnpm build`, {
+      cwd: absoluteFarcasterCryptographyWebRoot,
+    });
+  } catch (error) {
+    console.error(error);
+  }
+}
+
 function publishClientData() {
   try {
     run(`pnpm build`, {
@@ -136,8 +158,10 @@ export {
   getPackageJsonPath,
   publishClientData,
   publishClientHooks,
+  publishFarcasterAnalytics,
   publishFarcasterCryptography,
   publishFarcasterCryptographyReactNative,
+  publishFarcasterCryptographyWeb,
   publishFarcasterExpo,
   run,
 };

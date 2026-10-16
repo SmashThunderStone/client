@@ -28,6 +28,16 @@ const absoluteClientHooksRoot = join(
   relativeClientHooksRoot,
 );
 
+const farcasterAnalyticsPackageName = 'farcaster-analytics';
+const relativeFarcasterAnalyticsRoot = join(
+  relativePackagesRoot,
+  farcasterAnalyticsPackageName,
+);
+const absoluteFarcasterAnalyticsRoot = join(
+  absoluteWorkspaceRoot,
+  relativeFarcasterAnalyticsRoot,
+);
+
 const farcasterCryptographyPackageName = 'farcaster-cryptography';
 const relativeFarcasterCryptographyRoot = join(
   relativePackagesRoot,
@@ -36,6 +46,16 @@ const relativeFarcasterCryptographyRoot = join(
 const absoluteFarcasterCryptographyRoot = join(
   absoluteWorkspaceRoot,
   relativeFarcasterCryptographyRoot,
+);
+
+const farcasterCryptographyWebPackageName = 'farcaster-cryptography-web';
+const relativeFarcasterCryptographyWebRoot = join(
+  relativePackagesRoot,
+  farcasterCryptographyWebPackageName,
+);
+const absoluteFarcasterCryptographyWebRoot = join(
+  absoluteWorkspaceRoot,
+  relativeFarcasterCryptographyWebRoot,
 );
 
 const farcasterCryptographyReactNativePackageName =
@@ -71,8 +91,10 @@ export {
   absoluteAppsRoot,
   absoluteClientDataRoot,
   absoluteClientHooksRoot,
+  absoluteFarcasterAnalyticsRoot,
   absoluteFarcasterCryptographyReactNativeRoot,
   absoluteFarcasterCryptographyRoot,
+  absoluteFarcasterCryptographyWebRoot,
   absoluteFarcasterExpoRoot,
   absoluteMobileRoot,
   absolutePackagesRoot,
@@ -80,8 +102,10 @@ export {
   absoluteWorkspaceRoot,
   clientDataPackageName,
   clientHooksPackageName,
+  farcasterAnalyticsPackageName,
   farcasterCryptographyPackageName,
   farcasterCryptographyReactNativePackageName,
+  farcasterCryptographyWebPackageName,
   farcasterExpoPackageName,
   relativeClientDataRoot,
   relativeClientHooksRoot,
