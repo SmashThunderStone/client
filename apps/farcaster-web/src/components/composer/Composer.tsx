@@ -46,6 +46,7 @@ import { MediaComposerPicker } from '~/components/composer/pickers/MediaComposer
 import { FarcasterProUnlockFeaturesModal } from '~/components/farcasterPro/FarcasterProUnlockFeaturedModal';
 import { DefaultButton } from '~/components/forms/buttons/DefaultButton';
 import { AlertModal } from '~/components/modals/AlertModal';
+import { protocolDirectEnabled } from '~/constants/protocol';
 import { useAnalytics } from '~/contexts/AnalyticsProvider';
 import {
   ComposerParentCastProvider,
@@ -1963,19 +1964,26 @@ const ComposerInner = React.forwardRef<
                     </React.Suspense>
                   </span>
                 )}
-                <MediaComposerPicker
-                  className="bg-action-muted! !rounded-md !px-2 hover:!bg-tertiary"
-                  disabled={
-                    !!uploadingStatuses[focusedCastLocalKey] ||
-                    (getRemainingEmbedsCount(focusedCastLocalKey) > 0 &&
-                      !getCanAddMoreEmbeds(focusedCastLocalKey))
-                  }
-                  getRemainingEmbedsCount={() =>
-                    getRemainingEmbedsCount(focusedCastLocalKey)
-                  }
-                  castEmbedLimit={castEmbedLimit}
-                  onMediaUpload={addMediaEmbed}
-                />
+                {protocolDirectEnabled ? (
+                  <span className="max-w-[220px] px-1 text-xs leading-4 text-muted">
+                    Image upload needs the hosted Farcaster API. Paste an image
+                    link instead.
+                  </span>
+                ) : (
+                  <MediaComposerPicker
+                    className="bg-action-muted! !rounded-md !px-2 hover:!bg-tertiary"
+                    disabled={
+                      !!uploadingStatuses[focusedCastLocalKey] ||
+                      (getRemainingEmbedsCount(focusedCastLocalKey) > 0 &&
+                        !getCanAddMoreEmbeds(focusedCastLocalKey))
+                    }
+                    getRemainingEmbedsCount={() =>
+                      getRemainingEmbedsCount(focusedCastLocalKey)
+                    }
+                    castEmbedLimit={castEmbedLimit}
+                    onMediaUpload={addMediaEmbed}
+                  />
+                )}
                 <EmojiComposerPicker
                   className="!px-2 bg-action-muted hover:!bg-tertiary"
                   iconClassName="text-muted"

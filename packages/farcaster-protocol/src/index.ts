@@ -8,6 +8,8 @@ export {
   OPTIMISM_CHAIN_ID,
   SNAP_READ_HUB_URL,
 } from './constants';
+export type { EmbedKind, HubEmbed } from './embeds';
+export { classifyEmbedUrl, embedsFromCastBody } from './embeds';
 export { fidOfAddress } from './fid';
 export {
   getSignersByFid,
@@ -30,6 +32,7 @@ export {
 } from './messages';
 export type { HubCast, HubProfile } from './reads';
 export {
+  getCastById,
   getCastsByFid,
   getChronologicalFeed,
   getFollowingPage,

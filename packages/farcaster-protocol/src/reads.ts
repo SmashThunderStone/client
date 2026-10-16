@@ -1,5 +1,6 @@
 import { fromFarcasterTime } from '@farcaster/core';
 
+import { embedsFromCastBody, HubEmbed } from './embeds';
 import { SnapchainHub } from './hub';
 import { unwrap } from './result';
 
@@ -26,6 +27,7 @@ export type HubCast = {
     fid: number;
     hash: string;
   };
+  embeds: HubEmbed[];
 };
 
 type HubMessage = {
@@ -38,6 +40,11 @@ type HubMessage = {
       text?: string;
       parentCastId?: { fid?: number; hash?: string } | null;
       parentUrl?: string | null;
+      embeds?: Array<{
+        url?: string;
+        castId?: { fid?: number; hash?: string } | null;
+      } | null> | null;
+      embedsDeprecated?: Array<string | { url?: string } | null> | null;
     };
     userDataBody?: { type?: string; value?: string };
     linkBody?: { type?: string; targetFid?: number };
@@ -173,16 +180,11 @@ export async function getCastsByFid(
     if (!message.hash || typeof message.data.timestamp !== 'number') {
       continue;
     }
-    casts.push({
-      hash: message.hash,
-      fid,
-      text: body?.text || '',
-      timestampMs: unwrap(
-        fromFarcasterTime(message.data.timestamp),
-        'cast time',
-      ),
-      parent,
-    });
+    const cast = messageToCast(message, fid);
+    if (!cast) {
+      continue;
+    }
+    casts.push(cast);
     if (casts.length >= pageSize) {
       break;
     }
@@ -286,12 +288,15 @@ async function followedFids(
   }
 }
 
-function messageToCast(message: HubMessage): HubCast | null {
+function messageToCast(
+  message: HubMessage,
+  fallbackFid?: number,
+): HubCast | null {
   if (message.data?.type !== 'MESSAGE_TYPE_CAST_ADD') {
     return null;
   }
   const body = message.data.castAddBody;
-  const fid = message.data.fid;
+  const fid = message.data.fid ?? fallbackFid;
   if (!message.hash || typeof message.data.timestamp !== 'number' || !fid) {
     return null;
   }
@@ -307,7 +312,23 @@ function messageToCast(message: HubMessage): HubCast | null {
     text: body?.text || '',
     timestampMs: unwrap(fromFarcasterTime(message.data.timestamp), 'cast time'),
     parent,
+    embeds: embedsFromCastBody(body),
   };
+}
+
+export async function getCastById(
+  hubUrl: string,
+  fid: number,
+  hash: string,
+): Promise<HubCast | null> {
+  const hub = new SnapchainHub(hubUrl);
+  const message = await hub.getOptionalJson<HubMessage>(
+    `/v1/castById?fid=${fid}&hash=${encodeURIComponent(hash)}`,
+  );
+  if (!message) {
+    return null;
+  }
+  return messageToCast(message, fid);
 }
 
 /**

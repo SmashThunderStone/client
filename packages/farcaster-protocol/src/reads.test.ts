@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { HubCast, selectFeedCasts } from './reads';
 
 function cast(hash: string, timestampMs: number): HubCast {
-  return { hash, fid: 1, text: hash, timestampMs };
+  return { hash, fid: 1, text: hash, timestampMs, embeds: [] };
 }
 
 describe('selectFeedCasts', () => {

@@ -1,6 +1,10 @@
 import {
   ApiCast,
+  ApiCastEmbeds,
   ApiCastFeedItem,
+  ApiCastImageEmbed,
+  ApiCastUrlEmbed,
+  ApiCastVideoEmbed,
   ApiChannel,
   ApiCreateCast201Response,
   ApiCreateCastLike200Response,
@@ -16,6 +20,7 @@ import {
   ApiGetUserCasts200Response,
   ApiGetUserPreferences200Response,
   ApiGetUserThreadCasts200Response,
+  ApiQuoteCastEmbed,
   ApiUser,
 } from 'farcaster-client-data';
 import {
@@ -23,6 +28,8 @@ import {
   buildFollow,
   buildReaction,
   castReadBackPath,
+  classifyEmbedUrl,
+  getCastById,
   getCastsByFid,
   getChronologicalFeed,
   getFollowingPage,
@@ -31,6 +38,7 @@ import {
   getProfileByUsername,
   getThreadByUsername,
   HubCast,
+  HubEmbed,
   HubProfile,
   linkReadBackPath,
   messageHash,
@@ -68,7 +76,231 @@ function sessionAuthor(session: ProtocolSession): ApiUser {
   };
 }
 
-export function hubCastToApiCast(cast: HubCast, author: ApiUser): ApiCast {
+const DEFAULT_VIDEO_WIDTH = 1280;
+const DEFAULT_VIDEO_HEIGHT = 720;
+
+const quoteCache = new Map<string, ApiQuoteCastEmbed>();
+
+function quoteKey(id: { fid: number; hash: string }): string {
+  return `${id.fid}:${id.hash.toLowerCase()}`;
+}
+
+function fallbackUser(fid: number): ApiUser {
+  return {
+    fid,
+    displayName: `FID ${fid}`,
+    profile: { bio: { text: '', mentions: [] } },
+    followerCount: 0,
+    followingCount: 0,
+  };
+}
+
+function linkEmbed(url: string): ApiCastUrlEmbed {
+  let domain = url;
+  try {
+    domain = new URL(url).hostname.replace(/^www\./, '');
+  } catch {
+    domain = url;
+  }
+  return {
+    type: 'url',
+    openGraph: {
+      url,
+      sourceUrl: url,
+      domain,
+      title: domain,
+    },
+  };
+}
+
+function textWithoutEmbedUrls(
+  text: string,
+  urls: string[],
+): string | undefined {
+  let next = text;
+  for (const url of urls) {
+    if (url) {
+      next = next.split(url).join('');
+    }
+  }
+  const trimmed = next
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+  return trimmed === text ? undefined : trimmed;
+}
+
+function embedsForHubCast(
+  cast: HubCast,
+  quotes: Map<string, ApiQuoteCastEmbed>,
+): ApiCastEmbeds | undefined {
+  const raw = cast.embeds ?? [];
+  if (raw.length === 0) {
+    return undefined;
+  }
+  const images: ApiCastImageEmbed[] = [];
+  const videos: ApiCastVideoEmbed[] = [];
+  const urls: ApiCastUrlEmbed[] = [];
+  const casts: ApiQuoteCastEmbed[] = [];
+  for (const embed of raw) {
+    if (embed.castId) {
+      const quote = quotes.get(quoteKey(embed.castId));
+      if (quote) {
+        casts.push(quote);
+      } else {
+        urls.push(
+          linkEmbed(
+            `https://farcaster.xyz/~/conversations/${embed.castId.hash}`,
+          ),
+        );
+      }
+      continue;
+    }
+    if (!embed.url) {
+      continue;
+    }
+    const kind = classifyEmbedUrl(embed.url);
+    if (kind === 'image') {
+      images.push({
+        type: 'image',
+        url: embed.url,
+        sourceUrl: embed.url,
+        alt: '',
+      });
+    } else if (kind === 'video') {
+      videos.push({
+        type: 'video',
+        url: embed.url,
+        sourceUrl: embed.url,
+        width: DEFAULT_VIDEO_WIDTH,
+        height: DEFAULT_VIDEO_HEIGHT,
+      });
+    } else {
+      urls.push(linkEmbed(embed.url));
+    }
+  }
+  return {
+    images,
+    urls,
+    videos,
+    casts: casts.length > 0 ? casts : undefined,
+    unknowns: [],
+    processedCastText: textWithoutEmbedUrls(cast.text, [
+      ...images.map((image) => image.url),
+      ...videos.map((video) => video.url),
+      ...urls.map((url) => url.openGraph.url),
+    ]),
+  };
+}
+
+function quoteFromHubCast(cast: HubCast, author: ApiUser): ApiQuoteCastEmbed {
+  const apiCast = hubCastToApiCast(cast, author, new Map());
+  return {
+    hash: apiCast.hash,
+    threadHash: apiCast.threadHash,
+    parentHash: apiCast.parentHash,
+    author: apiCast.author,
+    text: apiCast.text,
+    timestamp: apiCast.timestamp,
+    embeds: apiCast.embeds,
+  };
+}
+
+async function mapLimit<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const out: R[] = new Array(items.length);
+  let index = 0;
+  const workers = Array.from(
+    { length: Math.min(limit, items.length) },
+    async () => {
+      while (index < items.length) {
+        const current = index;
+        index += 1;
+        out[current] = await fn(items[current] as T);
+      }
+    },
+  );
+  await Promise.all(workers);
+  return out;
+}
+
+async function loadQuotes(
+  hubUrl: string,
+  casts: HubCast[],
+  authors: Map<number, ApiUser>,
+): Promise<Map<string, ApiQuoteCastEmbed>> {
+  const wanted: HubEmbed[] = [];
+  const seen = new Set<string>();
+  for (const cast of casts) {
+    for (const embed of cast.embeds ?? []) {
+      if (!embed.castId) {
+        continue;
+      }
+      const key = quoteKey(embed.castId);
+      if (seen.has(key) || quoteCache.has(key)) {
+        continue;
+      }
+      seen.add(key);
+      wanted.push(embed);
+    }
+  }
+  const fetched = await mapLimit(wanted, 4, async (embed) => {
+    const id = embed.castId as { fid: number; hash: string };
+    const hubCast = await getCastById(hubUrl, id.fid, id.hash).catch(
+      () => null,
+    );
+    return { id, hubCast };
+  });
+  const missingAuthors = new Set<number>();
+  for (const item of fetched) {
+    if (item.hubCast && !authors.has(item.hubCast.fid)) {
+      missingAuthors.add(item.hubCast.fid);
+    }
+  }
+  await Promise.all(
+    [...missingAuthors].map(async (fid) => {
+      const profile = await getLightProfile(hubUrl, fid).catch(() => null);
+      authors.set(
+        fid,
+        profile ? hubProfileToApiUser(profile) : fallbackUser(fid),
+      );
+    }),
+  );
+  for (const item of fetched) {
+    if (!item.hubCast) {
+      continue;
+    }
+    quoteCache.set(
+      quoteKey(item.id),
+      quoteFromHubCast(
+        item.hubCast,
+        authors.get(item.hubCast.fid) ?? fallbackUser(item.hubCast.fid),
+      ),
+    );
+  }
+  const quotes = new Map<string, ApiQuoteCastEmbed>();
+  for (const cast of casts) {
+    for (const embed of cast.embeds ?? []) {
+      if (!embed.castId) {
+        continue;
+      }
+      const quote = quoteCache.get(quoteKey(embed.castId));
+      if (quote) {
+        quotes.set(quoteKey(embed.castId), quote);
+      }
+    }
+  }
+  return quotes;
+}
+
+export function hubCastToApiCast(
+  cast: HubCast,
+  author: ApiUser,
+  quotes: Map<string, ApiQuoteCastEmbed> = new Map(),
+): ApiCast {
   return {
     hash: cast.hash,
     threadHash: cast.parent?.hash || cast.hash,
@@ -85,6 +317,7 @@ export function hubCastToApiCast(cast: HubCast, author: ApiUser): ApiCast {
     author,
     text: cast.text,
     timestamp: cast.timestampMs,
+    embeds: embedsForHubCast(cast, quotes),
     replies: { count: 0 },
     reactions: { count: 0 },
     recasts: { count: 0 },
@@ -132,9 +365,11 @@ export async function protocolUserCasts(params: {
     getLightProfile(hubUrl, params.fid),
   ]);
   const author = hubProfileToApiUser(authorProfile);
+  const authors = new Map<number, ApiUser>([[params.fid, author]]);
+  const quotes = await loadQuotes(hubUrl, page.casts, authors);
   return {
     result: {
-      casts: page.casts.map((cast) => hubCastToApiCast(cast, author)),
+      casts: page.casts.map((cast) => hubCastToApiCast(cast, author, quotes)),
     },
     next: page.nextPageToken ? { cursor: page.nextPageToken } : undefined,
   };
@@ -206,6 +441,9 @@ export async function protocolCreateCast(params: {
             hash: params.parentCastHash,
           }
         : undefined,
+      embeds: (params.embeds ?? [])
+        .filter((url) => url.length > 0)
+        .map((url) => ({ url })),
     },
     sessionAuthor(session),
   );
@@ -380,10 +618,15 @@ export async function protocolHomeFeed(params: {
       );
     }),
   );
+  const quotes = await loadQuotes(hubUrl, page, authors);
   const items: ApiCastFeedItem[] = page.map((cast) => ({
     id: cast.hash,
     timestamp: cast.timestampMs,
-    cast: hubCastToApiCast(cast, authors.get(cast.fid) as ApiUser),
+    cast: hubCastToApiCast(
+      cast,
+      authors.get(cast.fid) ?? fallbackUser(cast.fid),
+      quotes,
+    ),
     otherParticipants: [],
   }));
   return {
@@ -431,12 +674,14 @@ export async function protocolThread(params: {
         );
       }),
   );
+  const quotes = await loadQuotes(hubUrl, thread.casts, authors);
   return {
     result: {
       casts: thread.casts.map((cast) => {
         const apiCast = hubCastToApiCast(
           cast,
-          authors.get(cast.fid) as ApiUser,
+          authors.get(cast.fid) ?? fallbackUser(cast.fid),
+          quotes,
         );
         if (cast.hash === thread.casts[0]?.hash) {
           apiCast.replies = { count: 0 };

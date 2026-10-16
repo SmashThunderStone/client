@@ -110,6 +110,8 @@ Off unless `VITE_PROTOCOL_DIRECT=1`. Details and the gasless vs onchain signer c
 
 With that flag on and no hosted auth token, profile, casts, follows, and the home feed are read from the hub. Home is a chronological merge of your casts and a capped page of accounts you follow. Preferences and app context use local defaults. Other hosted screens say they are not available in SmashCast direct mode instead of failing the page. Placeholder PostHog (`REPLACE_ME`) is not initialized.
 
+Hub embeds are only a URL or a quoted cast id. Direct mode shows `imagedelivery.net`, `i.imgur.com`, `wrpcd.net`, and `.png`/`.jpg`/`.jpeg`/`.gif`/`.webp` links as images, `stream.farcaster.xyz` and `.m3u8`/`.mp4`/`.webm` links in the existing video player, quoted casts from the hub, and every other URL as a link card. The composer image button is hidden in this mode: upload URLs come from the hosted API (`POST /v1/generate-image-upload-url`). Paste an image link into the cast instead. A replacement uploader would need to accept the file without a Farcaster token and return a stable public HTTPS URL on one of those image hosts, or a URL ending in an image extension.
+
 Phone steps, once that flag and a WalletConnect project id are set on the Vercel build:
 
 1. In Rainbow or MetaMask, import the Farcaster recovery phrase. Do this in the wallet, not in SmashCast.
