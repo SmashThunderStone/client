@@ -22,6 +22,7 @@ import { MiniAppProvider } from '~/contexts/MiniAppProvider';
 import { MinimizableWindowProvider } from '~/contexts/MinimizableWindowProvider';
 import { PersistQueryClientInstanceProvider } from '~/contexts/PersistQueryClientInstanceProvider';
 import { PopStateProvider } from '~/contexts/PopStateProvider';
+import { ProtocolSessionProvider } from '~/contexts/ProtocolSessionProvider';
 import { RecentFetchProvider } from '~/contexts/RecentFetchProvider';
 import { ScrollProvider } from '~/contexts/ScrollProvider';
 import { StandaloneModeProvider } from '~/contexts/StandaloneModeProvider';
@@ -96,28 +97,30 @@ const App: FC = () => {
                                   <WebFarcasterApiClientProvider>
                                     {/* AuthProvider must be a child of QueryClientProvider, AuthProvider, WebFarcasterApiClientProvider, and FeatureFlagProvider */}
                                     <AuthProvider>
-                                      <AuthGatedBlockedDomainsProvider>
-                                        <ThemeProvider>
-                                          <AnalyticsProvider>
-                                            <SnapWindowErrorListenerInstaller />
-                                            <InteractedSnapUrlsWebProvider>
-                                              <PubSubProvider>
-                                                <VideoPlayStatusProvider>
-                                                  <DirectCastToTakeActionProvider>
-                                                    <MiniAppProvider>
-                                                      <MinimizableWindowProvider>
-                                                        <BrowserRouter>
-                                                          <Router />
-                                                        </BrowserRouter>
-                                                      </MinimizableWindowProvider>
-                                                    </MiniAppProvider>
-                                                  </DirectCastToTakeActionProvider>
-                                                </VideoPlayStatusProvider>
-                                              </PubSubProvider>
-                                            </InteractedSnapUrlsWebProvider>
-                                          </AnalyticsProvider>
-                                        </ThemeProvider>
-                                      </AuthGatedBlockedDomainsProvider>
+                                      <ProtocolSessionProvider>
+                                        <AuthGatedBlockedDomainsProvider>
+                                          <ThemeProvider>
+                                            <AnalyticsProvider>
+                                              <SnapWindowErrorListenerInstaller />
+                                              <InteractedSnapUrlsWebProvider>
+                                                <PubSubProvider>
+                                                  <VideoPlayStatusProvider>
+                                                    <DirectCastToTakeActionProvider>
+                                                      <MiniAppProvider>
+                                                        <MinimizableWindowProvider>
+                                                          <BrowserRouter>
+                                                            <Router />
+                                                          </BrowserRouter>
+                                                        </MinimizableWindowProvider>
+                                                      </MiniAppProvider>
+                                                    </DirectCastToTakeActionProvider>
+                                                  </VideoPlayStatusProvider>
+                                                </PubSubProvider>
+                                              </InteractedSnapUrlsWebProvider>
+                                            </AnalyticsProvider>
+                                          </ThemeProvider>
+                                        </AuthGatedBlockedDomainsProvider>
+                                      </ProtocolSessionProvider>
                                     </AuthProvider>
                                   </WebFarcasterApiClientProvider>
                                 </LinkifyProvider>

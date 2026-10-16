@@ -59,6 +59,9 @@ None are required to boot the web client.
 | `HTTPS` | No | Anything other than `false` serves HTTPS on the **dev** server. `pnpm start` sets it to `true`. Ignored by `vite build` and `vite preview`. |
 | `VITE_RELEASE_ID` | No | Build-time label. Defaults to `dev` (`src/constants/env.ts`). |
 | `VITE_FC_API_BASE` | Production only | Same-origin API prefix. `apps/farcaster-web/.env.production` sets `/fc-api`. Unset during local dev, which keeps `https://farcaster.xyz/~api`. |
+| `VITE_PROTOCOL_DIRECT` | No | Set to `1` to read profiles, casts, and follows from a Snapchain hub and to show wallet sign-in. Unset leaves QR login and the hosted API exactly as they are. |
+| `VITE_SNAP_API_BASE` | No | Hub base URL. Defaults to `https://haatz.quilibrium.com`. Set to `/snap` to use the same-origin rewrite. |
+| `VITE_WALLETCONNECT_PROJECT_ID` | For mobile wallet sign-in | Reown / WalletConnect Cloud project id. Browser injected wallets work without it. |
 
 Analytics keys in `packages/farcaster-analytics/src/config/analyticsConfig.ts` are the placeholder `REPLACE_ME`. The app still runs. The browser console will show a failed request to `https://ph.neynar.com/array/REPLACE_ME/config.js`. Replace those constants only if you want PostHog.
 
@@ -87,7 +90,7 @@ Project settings for the Vercel API (`POST /v11/projects`):
 | Output directory | `apps/farcaster-web/dist` |
 | Env `VITE_FC_API_BASE` | `/fc-api` (Production and Preview). Also committed in `.env.production`. |
 
-`pnpm build:web` compiles `farcaster-analytics`, `farcaster-cryptography`, `farcaster-cryptography-web`, `farcaster-client-data`, and `farcaster-client-hooks` (in that order), then `vite build` for `farcaster-web`. It is not `pnpm watch`.
+`pnpm build:web` compiles `farcaster-analytics`, `farcaster-cryptography`, `farcaster-cryptography-web`, `farcaster-client-data`, `farcaster-protocol`, and `farcaster-client-hooks` (in that order), then `vite build` for `farcaster-web`. It is not `pnpm watch`.
 
 Deep links such as `/dwr` are rewritten to `/index.html` after the filesystem is checked, so hashed assets are still served as files.
 
@@ -100,6 +103,23 @@ pnpm exec vite preview --host 127.0.0.1 --port 4173
 ```
 
 Use `127.0.0.1`, not `localhost`. `localhost` is on the API's CORS allowlist, so a preview there would succeed even if the proxy were broken.
+
+## Protocol-direct wallet sign-in
+
+Off unless `VITE_PROTOCOL_DIRECT=1`. Details and the gasless vs onchain signer choice are in `packages/farcaster-protocol/README.md`.
+
+Phone steps, once that flag and a WalletConnect project id are set on the Vercel build:
+
+1. In Rainbow or MetaMask, import the Farcaster recovery phrase. Do this in the wallet, not in SmashCast.
+2. Open SmashCast and tap **Sign in with wallet**, then **WalletConnect**.
+3. Approve the connection in the wallet. The app looks up `IdRegistry.idOf` on Optimism. If the address does not own a FID, it stops with an error.
+4. Tap **Approve signer**. Confirm the two signatures (signed key request, then key add). They are not transactions.
+5. SmashCast submits a gasless `KEY_ADD` to the hub and waits until `signersByFid` lists the new key.
+6. If that submit is rejected, tap **Register onchain instead**. Confirm the Optimism `KeyGateway.add` transaction. That one costs gas.
+
+Sign out deletes the Ed25519 seed from this browser's IndexedDB.
+
+Vercel settings that stay the same: root directory null, framework null, Node 22.x, install and build commands from `vercel.json`, output `apps/farcaster-web/dist`. Add `VITE_PROTOCOL_DIRECT=1` only when this path should be live. `VITE_SNAP_API_BASE` and `VITE_WALLETCONNECT_PROJECT_ID` are optional as described above. The `/snap` rewrite points at `https://haatz.quilibrium.com` and does not attach an API key.
 
 ## Mobile
 

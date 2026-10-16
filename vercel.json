@@ -10,6 +10,10 @@
       "destination": "https://client.farcaster.xyz/:path*"
     },
     {
+      "source": "/snap/:path*",
+      "destination": "https://haatz.quilibrium.com/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

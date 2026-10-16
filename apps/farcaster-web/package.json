@@ -55,6 +55,7 @@
     "farcaster-analytics": "workspace:*",
     "farcaster-client-data": "workspace:*",
     "farcaster-client-hooks": "workspace:*",
+    "farcaster-protocol": "workspace:*",
     "farcaster-cryptography": "workspace:*",
     "farcaster-cryptography-web": "workspace:*",
     "goober": "^2.1.16",

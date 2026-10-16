@@ -2,6 +2,8 @@ import { ApiCast } from 'farcaster-client-data';
 import { useCallback } from 'react';
 
 import { RecastError } from '../../../errors';
+import { protocolReact, protocolRecastResponse } from '../../../protocol/api';
+import { protocolSession } from '../../../protocol/runtime';
 import { useFarcasterApiClient } from '../../../providers/FarcasterApiClientProvider';
 import { useOptimisticallyUpdateCast } from '../optimistic';
 import { useInvalidateUserCasts } from '../queries/userCasts/useInvalidateUserCasts';
@@ -66,9 +68,20 @@ const useCreateRecast = () => {
       });
 
       try {
-        const response = await apiClient.createRecast({
-          castHash: cast.hash,
-        });
+        const response = protocolSession()
+          ? {
+              data: protocolRecastResponse(
+                await protocolReact({
+                  action: 'add',
+                  reaction: 'recast',
+                  targetFid: cast.author.fid,
+                  targetHash: cast.hash,
+                }),
+              ),
+            }
+          : await apiClient.createRecast({
+              castHash: cast.hash,
+            });
 
         invalidateUserCasts({ fid: cast.author.fid });
 

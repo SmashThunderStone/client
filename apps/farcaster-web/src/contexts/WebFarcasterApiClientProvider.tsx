@@ -5,11 +5,23 @@ import {
   OnFetchStart,
 } from 'farcaster-client-data';
 import { FarcasterApiClientProvider } from 'farcaster-client-hooks';
-import React, { FC, memo, ReactNode, useCallback, useMemo } from 'react';
+import React, {
+  FC,
+  memo,
+  ReactNode,
+  useCallback,
+  useMemo,
+  useSyncExternalStore,
+} from 'react';
 
 import { baseApiUrl, wsUrl } from '~/constants/api';
 import { isDev } from '~/constants/env';
+import { protocolDirectEnabled, snapHubUrl } from '~/constants/protocol';
 import { useRecentFetch } from '~/contexts/RecentFetchProvider';
+import {
+  getProtocolSession,
+  subscribeProtocolSession,
+} from '~/protocol/bridge';
 import { Analytics } from '~/utils/analyticsUtils';
 import { getPersistedDeviceId } from '~/utils/deviceIdUtils';
 
@@ -26,6 +38,22 @@ const apiClient = new FarcasterApiClient();
 const WebFarcasterApiClientProvider: FC<WebFarcasterApiClientProviderProps> =
   memo(({ children }) => {
     const { trackFetch } = useRecentFetch();
+    const session = useSyncExternalStore(
+      subscribeProtocolSession,
+      getProtocolSession,
+      getProtocolSession,
+    );
+    const protocol = useMemo(
+      () =>
+        protocolDirectEnabled
+          ? {
+              enabled: true,
+              hubUrl: snapHubUrl,
+              getSession: () => session,
+            }
+          : undefined,
+      [session],
+    );
 
     // deviceId → FC-DEVICE-ID header. The backend's one-token-per-device
     // dedup keys on it; without it every web mint takes the noDeviceId path
@@ -73,6 +101,7 @@ const WebFarcasterApiClientProvider: FC<WebFarcasterApiClientProviderProps> =
         fetch={fetch}
         getDeviceId={Analytics.getDeviceId}
         getSessionId={Analytics.getSessionId}
+        protocol={protocol}
       >
         {children}
       </FarcasterApiClientProvider>

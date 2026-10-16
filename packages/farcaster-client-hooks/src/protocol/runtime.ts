@@ -1,0 +1,28 @@
+export type ProtocolSession = {
+  fid: number;
+  address: `0x${string}`;
+  privateKey: Uint8Array;
+  publicKey: Uint8Array;
+  username?: string;
+  displayName: string;
+  pfpUrl?: string;
+};
+
+type ProtocolRuntime = {
+  hubUrl: string;
+  getSession: () => ProtocolSession | null;
+};
+
+let runtime: ProtocolRuntime | null = null;
+
+export function setProtocolRuntime(next: ProtocolRuntime | null) {
+  runtime = next;
+}
+
+export function protocolHubUrl(): string | null {
+  return runtime?.hubUrl ?? null;
+}
+
+export function protocolSession(): ProtocolSession | null {
+  return runtime?.getSession() ?? null;
+}

@@ -3,6 +3,8 @@ import { ApiUser, ApiUserAppContext } from 'farcaster-client-data';
 import { useCallback } from 'react';
 
 import { CreateFollowError } from '../../../errors';
+import { protocolFollow, protocolFollowResponse } from '../../../protocol/api';
+import { protocolSession } from '../../../protocol/runtime';
 import { useFarcasterApiClient } from '../../../providers/FarcasterApiClientProvider';
 import { useOptimisticallyUpdateUser } from '../optimistic/useOptimisticallyUpdateUser';
 import { buildUserAppContextKey } from '../queries/userAppContext/buildUserAppContextKey';
@@ -49,9 +51,17 @@ const useCreateFollow = () => {
       });
 
       try {
-        const { data } = await apiClient.createFollow({
-          targetFid: followee.fid,
-        });
+        const data = protocolSession()
+          ? (await protocolFollow({
+              action: 'add',
+              targetFid: followee.fid,
+            }),
+            protocolFollowResponse())
+          : (
+              await apiClient.createFollow({
+                targetFid: followee.fid,
+              })
+            ).data;
 
         const userAppContextKey = buildUserAppContextKey();
         queryClient.setQueryData(

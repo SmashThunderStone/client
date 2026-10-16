@@ -1,5 +1,7 @@
 import { FarcasterApiClient } from 'farcaster-client-data';
 
+import { protocolUserByUsername } from '../../../../protocol/api';
+import { protocolHubUrl } from '../../../../protocol/runtime';
 import { MergeIntoGloballyCachedUser } from '../../../../types';
 
 const buildUserByUsernameFetcher =
@@ -14,6 +16,13 @@ const buildUserByUsernameFetcher =
   }) =>
   async () => {
     try {
+      if (protocolHubUrl()) {
+        const response = await protocolUserByUsername(username.toLowerCase());
+        if (response) {
+          mergeIntoGloballyCachedUser({ updates: response.result.user });
+        }
+        return response;
+      }
       const response = await apiClient.getUserByUsername({
         // API endpoint is case-sensitive and won't accept
         // uppercased usernames as they are technically invalid

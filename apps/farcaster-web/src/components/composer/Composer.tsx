@@ -1000,6 +1000,7 @@ const ComposerInner = React.forwardRef<
           }
 
           let nextParentCastHash = parentCastHash;
+          let nextParentAuthorFid = initialIntent?.parentCast?.author.fid;
           let firstData;
           const publishedReplies: {
             parentCastHash: string;
@@ -1023,6 +1024,10 @@ const ComposerInner = React.forwardRef<
               fid: currentUser.fid,
               castText: getText(queuedCast),
               parentCastHash: castParentHash,
+              parentAuthorFid:
+                typeof castParentHash !== 'undefined'
+                  ? nextParentAuthorFid
+                  : undefined,
               embeds,
               channelKey,
             });
@@ -1074,6 +1079,7 @@ const ComposerInner = React.forwardRef<
                 : undefined),
             });
             nextParentCastHash = hash;
+            nextParentAuthorFid = authorFid;
           }
 
           const firstResult = firstData?.result;
@@ -1239,6 +1245,7 @@ const ComposerInner = React.forwardRef<
       onForceCloseWrappingModal,
       optimisticallyAddNewCastToThread,
       parentCastHash,
+      initialIntent?.parentCast?.author.fid,
       initialIncludeReason,
       processedEmbeds,
       queuedCasts,

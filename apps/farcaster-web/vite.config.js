@@ -44,6 +44,12 @@ export default defineConfig(({ command }) => {
           secure: true,
           rewrite: (requestPath) => requestPath.replace(/^\/fc-api/, '') || '/',
         },
+        '/snap': {
+          target: 'https://haatz.quilibrium.com',
+          changeOrigin: true,
+          secure: true,
+          rewrite: (requestPath) => requestPath.replace(/^\/snap/, '') || '/',
+        },
       },
     },
     build: {

@@ -10,6 +10,7 @@ import { LogoBrandContextMenu } from '~/components/LogoBrandContextMenu';
 import { LoginMagicLinkModal } from '~/components/modals/LoginMagicLinkModal';
 import { LoginModal } from '~/components/modals/LoginModal';
 import { Page } from '~/components/page/Page';
+import { protocolDirectEnabled } from '~/constants/protocol';
 import { useAnalytics } from '~/contexts/AnalyticsProvider';
 import { isMobile } from '~/utils/navigatorUtils';
 
@@ -105,6 +106,18 @@ export function HomeLandingPage() {
                     Log in with phone
                   </div>
                 </div>
+                {protocolDirectEnabled && (
+                  <div
+                    className="landing-btn-secondary-bg flex w-full cursor-pointer items-center justify-center rounded-[300px] px-[36px] py-[10px]"
+                    onClick={() => {
+                      setIsLoggingIn(true);
+                    }}
+                  >
+                    <div className="text-[16px] text-light">
+                      Sign in with wallet
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="mt-[35px] flex flex-col space-y-3">
                 <div className="flex flex-row items-center space-x-2 py-2">

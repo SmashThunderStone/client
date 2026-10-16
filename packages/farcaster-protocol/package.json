@@ -1,0 +1,32 @@
+{
+  "name": "farcaster-protocol",
+  "version": "0.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "license": "MIT",
+  "sideEffects": false,
+  "files": [
+    "src/**/*"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "format": "prettier --write \"**/*.{ts,tsx,js,json}\" --config ../../.prettierrc.js --ignore-path ../../.prettierignore",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@farcaster/core": "0.18.11",
+    "@noble/curves": "^1.9.1",
+    "viem": "2.39.3"
+  },
+  "devDependencies": {
+    "eslint-config-custom": "workspace:*",
+    "tsconfig": "workspace:*",
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
+    "vitest": "^3.1.1",
+    "@typescript/native": "npm:typescript@^7.0.2"
+  }
+}
