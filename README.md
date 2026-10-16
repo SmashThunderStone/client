@@ -6,7 +6,7 @@ This is designed to be a reference for building a social client on top of the Fa
 
 ## Getting Started
 
-Versions, HTTPS, and env vars are in [SETUP.md](./SETUP.md). Short version: Node `>= 20.19.4` (repo pin `20.19.5`), pnpm `10.8.1`. No `.env` file is required for the web client.
+Versions, HTTPS, and env vars are in [SETUP.md](./SETUP.md). Short version: Node 22.x on Vercel (local pin `20.19.5`), pnpm `10.8.1`. No `.env` file is required to run the web client locally. Static hosting settings are in the Production section of SETUP.md.
 
 In the project root, install dependencies and start watching shared packages:
 
