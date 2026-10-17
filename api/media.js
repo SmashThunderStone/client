@@ -46975,6 +46975,18 @@ function verifyMediaUploadProof(clientPayload, now) {
   }
   return proof;
 }
+function activeHubSignerKeys(signers) {
+  const keys = [];
+  for (const signer of signers) {
+    if (signer.onChainEvent?.signerEventBody?.eventType === "SIGNER_EVENT_TYPE_REMOVE") {
+      continue;
+    }
+    if (typeof signer.key === "string" && signer.key.length > 0) {
+      keys.push({ key: signer.key });
+    }
+  }
+  return keys;
+}
 function authorizeMediaUpload(params) {
   const proof = verifyMediaUploadProof(params.clientPayload, params.now);
   if (proof.pathname !== params.pathname) {
@@ -47042,12 +47054,27 @@ async function signersForFid(fid) {
   if (cached && Date.now() - cached.at < SIGNER_CACHE_MS) {
     return cached.signers;
   }
-  const response = await fetch(`${HUB_URL}/v1/signersByFid?fid=${fid}`);
-  if (!response.ok) {
-    throw new Error("Could not check this FID on the hub");
+  const collected = [];
+  let pageToken = "";
+  for (let page = 0; page < 20; page += 1) {
+    const url = new URL(`${HUB_URL}/v1/signersByFid`);
+    url.searchParams.set("fid", String(fid));
+    url.searchParams.set("pageSize", "100");
+    if (pageToken) {
+      url.searchParams.set("pageToken", pageToken);
+    }
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error("Could not check this FID on the hub");
+    }
+    const json = await response.json();
+    collected.push(...json.signers ?? []);
+    pageToken = typeof json.nextPageToken === "string" ? json.nextPageToken : "";
+    if (!pageToken) {
+      break;
+    }
   }
-  const json = await response.json();
-  const signers = (json.signers ?? []).map((signer) => signer.key).filter((key) => typeof key === "string").map((key) => ({ key }));
+  const signers = activeHubSignerKeys(collected);
   signerCache.set(fid, { at: Date.now(), signers });
   return signers;
 }
@@ -47063,6 +47090,10 @@ async function readBody(req) {
   return text ? JSON.parse(text) : {};
 }
 function send(res, status, body) {
+  if (status >= 400) {
+    const message = body && typeof body === "object" && "error" in body && typeof body.error === "string" ? body.error : "rejected";
+    console.error(`[api/media] ${status} ${message}`);
+  }
   res.statusCode = status;
   res.setHeader("content-type", "application/json; charset=utf-8");
   res.end(JSON.stringify(body));

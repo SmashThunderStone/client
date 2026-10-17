@@ -20,6 +20,7 @@ export {
 } from './hub';
 export type { MediaContentType, MediaUploadProof } from './mediaAuth';
 export {
+  activeHubSignerKeys,
   authorizeMediaUpload,
   canonicalMediaUploadMessage,
   MEDIA_UPLOAD_MAX_AGE_MS,

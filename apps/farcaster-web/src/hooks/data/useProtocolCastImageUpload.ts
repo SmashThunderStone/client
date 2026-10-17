@@ -41,6 +41,68 @@ function contentTypeForFile(file: File): MediaContentType | null {
   return EXTENSION_TYPES[extension] ?? null;
 }
 
+function isHeicFile(file: File): boolean {
+  const type = file.type.toLowerCase();
+  if (
+    type === 'image/heic' ||
+    type === 'image/heif' ||
+    type === 'image/heic-sequence' ||
+    type === 'image/heif-sequence'
+  ) {
+    return true;
+  }
+  const extension = file.name.split('.').pop()?.toLowerCase() ?? '';
+  return extension === 'heic' || extension === 'heif';
+}
+
+async function jpegFileFromHeic(file: File): Promise<File> {
+  let bitmap: ImageBitmap;
+  try {
+    bitmap = await createImageBitmap(file);
+  } catch {
+    throw new Error(
+      'This browser could not read that HEIC photo. Export it as JPEG and try again.',
+    );
+  }
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    const context = canvas.getContext('2d');
+    if (!context) {
+      throw new Error(
+        'This browser could not read that HEIC photo. Export it as JPEG and try again.',
+      );
+    }
+    context.drawImage(bitmap, 0, 0);
+    const blob = await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob(resolve, 'image/jpeg', 0.92);
+    });
+    if (!blob) {
+      throw new Error(
+        'This browser could not read that HEIC photo. Export it as JPEG and try again.',
+      );
+    }
+    const name = file.name.replace(/\.(heic|heif)$/i, '') || 'photo';
+    return new File([blob], `${name}.jpg`, { type: 'image/jpeg' });
+  } finally {
+    bitmap.close();
+  }
+}
+
+function uploadedImageResponse(url: string): Response {
+  return new Response(
+    JSON.stringify({
+      success: true,
+      result: { variants: [url] },
+    }),
+    {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    },
+  );
+}
+
 async function sha256Hex(file: File): Promise<string> {
   const digest = await crypto.subtle.digest(
     'SHA-256',
@@ -85,16 +147,23 @@ const useProtocolCastImageUpload = () => {
     if (!session) {
       throw new Error('Sign in with your wallet to upload an image.');
     }
-    const contentType = contentTypeForFile(file);
-    if (!contentType) {
-      throw new Error('Use a JPEG, PNG, GIF, or WebP image.');
+    let uploadFile = file;
+    if (!contentTypeForFile(uploadFile)) {
+      if (!isHeicFile(uploadFile)) {
+        throw new Error('Use a JPEG, PNG, GIF, WebP, or HEIC image.');
+      }
+      uploadFile = await jpegFileFromHeic(uploadFile);
     }
-    if (file.size > MEDIA_UPLOAD_MAX_BYTES) {
+    const contentType = contentTypeForFile(uploadFile);
+    if (!contentType) {
+      throw new Error('Use a JPEG, PNG, GIF, WebP, or HEIC image.');
+    }
+    if (uploadFile.size > MEDIA_UPLOAD_MAX_BYTES) {
       throw new Error('Images must be 10 MB or smaller.');
     }
 
     const pathname = randomCastImagePath(session.fid, contentType);
-    const sha256 = await sha256Hex(file);
+    const sha256 = await sha256Hex(uploadFile);
     const timestamp = Date.now();
     const message = canonicalMediaUploadMessage({
       fid: session.fid,
@@ -102,7 +171,7 @@ const useProtocolCastImageUpload = () => {
       pathname,
       sha256,
       contentType,
-      size: file.size,
+      size: uploadFile.size,
     });
     const clientPayload = JSON.stringify({
       fid: session.fid,
@@ -110,7 +179,7 @@ const useProtocolCastImageUpload = () => {
       pathname,
       sha256,
       contentType,
-      size: file.size,
+      size: uploadFile.size,
       publicKey: bytesToHex(session.publicKey),
       signature: bytesToHex(signMediaUpload(session.privateKey, message)),
     });
@@ -141,7 +210,10 @@ const useProtocolCastImageUpload = () => {
       devMock?: { url?: string };
     };
     if (!response.ok) {
-      throw new Error(json.error || 'Image upload was rejected');
+      const message = json.error || 'Image upload was rejected';
+      // eslint-disable-next-line no-console -- surface the function's rejection
+      console.error('[api/media] upload rejected', response.status, message);
+      throw new Error(message);
     }
 
     const previewUrl = URL.createObjectURL(file);
@@ -153,7 +225,7 @@ const useProtocolCastImageUpload = () => {
         if (src) {
           publishCastImageProgress(src, null);
         }
-        return new Response(null, { status: 200 });
+        return uploadedImageResponse(devMockUrl);
       });
       return {
         version: 'v2' as const,
@@ -167,7 +239,7 @@ const useProtocolCastImageUpload = () => {
       throw new Error('Image upload did not return a token');
     }
     const imageUrl = publicBlobUrl(json.clientToken, pathname);
-    const uploadPromise = put(pathname, file, {
+    const uploadPromise = put(pathname, uploadFile, {
       access: 'public',
       token: json.clientToken,
       contentType,
@@ -183,12 +255,14 @@ const useProtocolCastImageUpload = () => {
         if (!blob.url.includes(filename)) {
           throw new Error('Uploaded image URL did not match the signed name');
         }
-        return new Response(null, { status: 200 });
+        return uploadedImageResponse(blob.url);
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) {
           return new Response(null, { status: 200 });
         }
+        // eslint-disable-next-line no-console -- surface the Blob client error
+        console.error('[api/media] blob put failed', error);
         throw error;
       })
       .finally(() => {

@@ -6,8 +6,10 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 
 import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
 import {
+  activeHubSignerKeys,
   authorizeMediaUpload,
   MEDIA_UPLOAD_MAX_BYTES,
+  type HubMediaSigner,
   verifyMediaUploadProof,
 } from '../../packages/farcaster-protocol/src/mediaAuth';
 
@@ -39,6 +41,8 @@ export default async function handler(req: NodeRequest, res: ServerResponse) {
 
   try {
     const body = (await readBody(req)) as HandleUploadBody;
+    // No onUploadCompleted. Blob would call this deployment back after the
+    // browser PUT, and Vercel Authentication on the preview rejects that call.
     const json = await handleUpload({
       body,
       request: req,
@@ -77,18 +81,34 @@ async function signersForFid(fid: number): Promise<{ key: string }[]> {
   if (cached && Date.now() - cached.at < SIGNER_CACHE_MS) {
     return cached.signers;
   }
-  const response = (await fetch(`${HUB_URL}/v1/signersByFid?fid=${fid}`)) as {
-    ok: boolean;
-    json(): Promise<{ signers?: { key?: string }[] }>;
-  };
-  if (!response.ok) {
-    throw new Error('Could not check this FID on the hub');
+  const collected: HubMediaSigner[] = [];
+  let pageToken = '';
+  for (let page = 0; page < 20; page += 1) {
+    const url = new URL(`${HUB_URL}/v1/signersByFid`);
+    url.searchParams.set('fid', String(fid));
+    url.searchParams.set('pageSize', '100');
+    if (pageToken) {
+      url.searchParams.set('pageToken', pageToken);
+    }
+    const response = (await fetch(url)) as {
+      ok: boolean;
+      json(): Promise<{
+        signers?: HubMediaSigner[];
+        nextPageToken?: string;
+      }>;
+    };
+    if (!response.ok) {
+      throw new Error('Could not check this FID on the hub');
+    }
+    const json = await response.json();
+    collected.push(...(json.signers ?? []));
+    pageToken =
+      typeof json.nextPageToken === 'string' ? json.nextPageToken : '';
+    if (!pageToken) {
+      break;
+    }
   }
-  const json = await response.json();
-  const signers = (json.signers ?? [])
-    .map((signer) => signer.key)
-    .filter((key): key is string => typeof key === 'string')
-    .map((key) => ({ key }));
+  const signers = activeHubSignerKeys(collected);
   signerCache.set(fid, { at: Date.now(), signers });
   return signers;
 }
@@ -106,6 +126,16 @@ async function readBody(req: NodeRequest): Promise<unknown> {
 }
 
 function send(res: ServerResponse, status: number, body: unknown) {
+  if (status >= 400) {
+    const message =
+      body &&
+      typeof body === 'object' &&
+      'error' in body &&
+      typeof body.error === 'string'
+        ? body.error
+        : 'rejected';
+    console.error(`[api/media] ${status} ${message}`);
+  }
   res.statusCode = status;
   res.setHeader('content-type', 'application/json; charset=utf-8');
   res.end(JSON.stringify(body));

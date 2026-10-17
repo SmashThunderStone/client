@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  activeHubSignerKeys,
   authorizeMediaUpload,
   canonicalMediaUploadMessage,
   MEDIA_UPLOAD_MAX_AGE_MS,
@@ -140,6 +141,23 @@ describe('media upload proofs', () => {
         signers: [{ key: `0x${'11'.repeat(32)}` }],
       }),
     ).toThrow(/not registered/);
+  });
+
+  it('drops removed onchain signers and keeps an offchain key', () => {
+    const removed = `0x${'ab'.repeat(32)}`;
+    const offchain = `0x${Buffer.from(publicKey).toString('hex')}`;
+    expect(
+      activeHubSignerKeys([
+        {
+          key: removed,
+          onChainEvent: {
+            signerEventBody: { eventType: 'SIGNER_EVENT_TYPE_REMOVE' },
+          },
+        },
+        { key: offchain },
+        { key: '' },
+      ]),
+    ).toEqual([{ key: offchain }]);
   });
 
   it('rejects a signed proof presented for a different pathname', () => {

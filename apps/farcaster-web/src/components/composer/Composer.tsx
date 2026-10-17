@@ -919,6 +919,17 @@ const ComposerInner = React.forwardRef<
           const results = await Promise.all(imagePromises);
 
           for (const result of results) {
+            if (protocolDirectEnabled) {
+              const body = (await result.json().catch(() => null)) as {
+                success?: boolean;
+                error?: string;
+              } | null;
+              if (!result.ok || !body?.success) {
+                throw new Error(body?.error || 'Image upload was rejected');
+              }
+              continue;
+            }
+
             const response: {
               success: boolean;
               result: { variants: string[] };
@@ -933,8 +944,14 @@ const ComposerInner = React.forwardRef<
             }
           }
         } catch (e) {
+          const message =
+            e instanceof Error && e.message
+              ? e.message
+              : 'Failed to upload image for the cast';
+          // eslint-disable-next-line no-console -- the toast must show the server message
+          console.error('Failed to upload image for the cast', e);
           toast({
-            message: 'Failed to upload image for the cast',
+            message,
             type: 'error',
             toastId: 'upload-image-failed',
           });

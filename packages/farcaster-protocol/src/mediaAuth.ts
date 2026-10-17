@@ -212,6 +212,34 @@ export function verifyMediaUploadProof(
   return proof;
 }
 
+export type HubMediaSigner = {
+  key?: string;
+  onChainEvent?: {
+    signerEventBody?: {
+      eventType?: string;
+    };
+  };
+};
+
+/** Keeps keys the hub still lists. A removed onchain signer is not authorized. */
+export function activeHubSignerKeys(
+  signers: HubMediaSigner[],
+): { key: string }[] {
+  const keys: { key: string }[] = [];
+  for (const signer of signers) {
+    if (
+      signer.onChainEvent?.signerEventBody?.eventType ===
+      'SIGNER_EVENT_TYPE_REMOVE'
+    ) {
+      continue;
+    }
+    if (typeof signer.key === 'string' && signer.key.length > 0) {
+      keys.push({ key: signer.key });
+    }
+  }
+  return keys;
+}
+
 export function authorizeMediaUpload(params: {
   pathname: string;
   clientPayload: string | null;

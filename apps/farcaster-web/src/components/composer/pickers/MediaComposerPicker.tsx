@@ -146,11 +146,14 @@ const MediaComposerPicker: React.FC<MediaComposerPickerProps> = ({
       <form ref={formRef} onSubmit={undefined} hidden>
         <input
           type="file"
-          accept={
+          accept={[
             canUploadVideo
               ? IMAGE_VIDEO_PICKER_EXTENSIONS
-              : IMAGE_PICKER_EXTENSIONS
-          }
+              : IMAGE_PICKER_EXTENSIONS,
+            protocolDirectEnabled ? '.heic,.heif' : '',
+          ]
+            .filter(Boolean)
+            .join(',')}
           multiple
           hidden
           ref={inputRef}
