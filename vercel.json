@@ -10,8 +10,17 @@
       "destination": "https://client.farcaster.xyz/:path*"
     },
     {
-      "source": "/(.*)",
+      "source": "/snap/:path*",
+      "destination": "https://haatz.quilibrium.com/:path*"
+    },
+    {
+      "source": "/((?!api(?:/|$))(?!fc-api(?:/|$))(?!snap(?:/|$)).*)",
       "destination": "/index.html"
     }
-  ]
+  ],
+  "functions": {
+    "api/media.js": {
+      "maxDuration": 10
+    }
+  }
 }

@@ -1,3 +1,4 @@
+import { injected, walletConnect } from '@wagmi/connectors';
 import { robinhood } from 'farcaster-client-data';
 import { bsc, degen, monadTestnet, unichain } from 'viem/chains';
 import { Config, createConfig, http, Transport } from 'wagmi';
@@ -44,10 +45,35 @@ const transports = chains.reduce(
   {} as Record<number, Transport>,
 );
 
+const protocolDirect = import.meta.env.VITE_PROTOCOL_DIRECT === '1';
+const walletConnectProjectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
+
 const wagmiConfig: Config = createConfig({
   chains,
   transports,
-  connectors: [],
+  connectors: protocolDirect
+    ? [
+        injected({ shimDisconnect: true }),
+        ...(walletConnectProjectId
+          ? [
+              walletConnect({
+                projectId: walletConnectProjectId,
+                showQrModal: true,
+                metadata: {
+                  name: 'SmashCast',
+                  description:
+                    'SmashCast is a client for the Farcaster protocol.',
+                  url:
+                    typeof window !== 'undefined'
+                      ? window.location.origin
+                      : 'https://smashcast.vercel.app',
+                  icons: ['https://smashcast.vercel.app/brand/icon-192.png'],
+                },
+              }),
+            ]
+          : []),
+      ]
+    : [],
 });
 
 export { wagmiConfig };

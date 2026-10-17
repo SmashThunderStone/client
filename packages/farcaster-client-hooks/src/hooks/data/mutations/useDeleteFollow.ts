@@ -3,6 +3,8 @@ import { ApiUser, ApiUserAppContext } from 'farcaster-client-data';
 import { useCallback } from 'react';
 
 import { DeleteFollowError } from '../../../errors';
+import { protocolFollow } from '../../../protocol/api';
+import { protocolSession } from '../../../protocol/runtime';
 import { useFarcasterApiClient } from '../../../providers/FarcasterApiClientProvider';
 import { useOptimisticallyUpdateUser } from '../optimistic/useOptimisticallyUpdateUser';
 import { buildUserAppContextKey } from '../queries/userAppContext/buildUserAppContextKey';
@@ -49,9 +51,19 @@ const useDeleteFollow = () => {
       });
 
       try {
-        const { data } = await apiClient.deleteFollow({
-          targetFid: followee.fid,
-        });
+        const data = protocolSession()
+          ? (await protocolFollow({
+              action: 'remove',
+              targetFid: followee.fid,
+            }),
+            {
+              result: { success: true, userAppContext: { canAddLinks: true } },
+            })
+          : (
+              await apiClient.deleteFollow({
+                targetFid: followee.fid,
+              })
+            ).data;
 
         const userAppContextKey = buildUserAppContextKey();
         queryClient.setQueryData(

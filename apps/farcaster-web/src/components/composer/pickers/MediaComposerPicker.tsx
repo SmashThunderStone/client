@@ -9,6 +9,7 @@ import React from 'react';
 
 import { showComposerAttachmentLimitToast } from '~/components/composer/composerAttachmentLimitToast';
 import { DefaultButton } from '~/components/forms/buttons/DefaultButton';
+import { protocolDirectEnabled } from '~/constants/protocol';
 import { useAnalytics } from '~/contexts/AnalyticsProvider';
 import { useUserAppContext } from '~/contexts/UserAppContextProvider';
 import { trackError } from '~/utils/errorUtils';
@@ -70,7 +71,9 @@ const MediaComposerPicker: React.FC<MediaComposerPickerProps> = ({
       formRef.current.reset();
       inputRef.current.click();
 
-      setLastImagePickerClickImageUploaderPromise(fetchImageUploadUrl());
+      if (!protocolDirectEnabled) {
+        setLastImagePickerClickImageUploaderPromise(fetchImageUploadUrl());
+      }
     }
   }, [
     canUploadVideo,
@@ -107,8 +110,9 @@ const MediaComposerPicker: React.FC<MediaComposerPickerProps> = ({
         try {
           const result = onMediaUpload({
             file: files[i],
-            imageUploaderPromise:
-              i === 0
+            imageUploaderPromise: protocolDirectEnabled
+              ? undefined
+              : i === 0
                 ? lastImagePickerClickImageUploaderPromise
                 : fetchImageUploadUrl(),
           });
@@ -142,11 +146,14 @@ const MediaComposerPicker: React.FC<MediaComposerPickerProps> = ({
       <form ref={formRef} onSubmit={undefined} hidden>
         <input
           type="file"
-          accept={
+          accept={[
             canUploadVideo
               ? IMAGE_VIDEO_PICKER_EXTENSIONS
-              : IMAGE_PICKER_EXTENSIONS
-          }
+              : IMAGE_PICKER_EXTENSIONS,
+            protocolDirectEnabled ? '.heic,.heif' : '',
+          ]
+            .filter(Boolean)
+            .join(',')}
           multiple
           hidden
           ref={inputRef}

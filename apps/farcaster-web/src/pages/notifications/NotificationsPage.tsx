@@ -9,6 +9,7 @@ import { NotificationsTab } from '~/components/notificationsTabs/NotificationsTa
 import { Page } from '~/components/page/Page';
 import { PageHeader } from '~/components/page/PageHeader';
 import { PageTitle } from '~/components/page/PageTitle';
+import { protocolDirectEnabled } from '~/constants/protocol';
 import { useAnalytics } from '~/contexts/AnalyticsProvider';
 import { useUserAppContext } from '~/contexts/UserAppContextProvider';
 import { useParams } from '~/hooks/navigation/useParams';
@@ -19,6 +20,26 @@ const NotificationsPage: FC = memo(() => {
   const { notificationTabs } = useUserAppContext();
 
   if (!notificationTabs) {
+    if (protocolDirectEnabled) {
+      return (
+        <Page meta={{ title: 'Farcaster / Notifications' }}>
+          <BorderedMainContent>
+            <PageHeader>
+              <PageTitle>Notifications</PageTitle>
+            </PageHeader>
+            <div className="px-4 py-16 text-center">
+              <div className="mb-2 text-lg font-semibold">
+                Notifications are not available in SmashCast direct mode
+              </div>
+              <div className="text-sm opacity-70">
+                Likes, follows, and casts still publish to Snapchain. There is
+                no hosted notification inbox for this sign-in.
+              </div>
+            </div>
+          </BorderedMainContent>
+        </Page>
+      );
+    }
     return null;
   }
 
@@ -73,6 +94,11 @@ const NotificationsPageContent: FC<NotificationsPageContentProps> = memo(
           >
             <PageTitle>Notifications</PageTitle>
           </PageHeader>
+          {protocolDirectEnabled && (
+            <div className="px-4 pb-2 text-xs text-muted">
+              Likes, replies, mentions, and follows from the hub, newest first.
+            </div>
+          )}
           <Suspense fallback={<FullScreenLoadingIndicator />}>
             <EventingProvider on={`notifications-${currentTab}`}>
               <NotificationsTab

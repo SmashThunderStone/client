@@ -5,6 +5,7 @@ import React from 'react';
 
 import { LocallyProbedImage } from '~/components/composer/context/OptimisticMediaEmbedsProvider';
 import { Image } from '~/components/images/Image';
+import { useCastImageUploadProgress } from '~/hooks/data/castImageUploadProgress';
 
 type ComposerImageAttachmentProps = {
   image: LocallyProbedImage;
@@ -17,11 +18,15 @@ const ComposerImageAttachment: React.FC<ComposerImageAttachmentProps> = ({
   isUploading = false,
   onRemove,
 }) => {
+  const progress = useCastImageUploadProgress(image.src);
+  const showProgress = isUploading || progress !== null;
+  const label =
+    progress !== null ? `Uploading ${Math.round(progress)}%` : 'Uploading';
   return (
     <div
       className={classNames(
         'relative overflow-hidden rounded-[12px] border border-default',
-        isUploading && 'animate-pulse',
+        showProgress && 'animate-pulse',
       )}
     >
       <div
@@ -30,10 +35,10 @@ const ComposerImageAttachment: React.FC<ComposerImageAttachmentProps> = ({
       >
         <XIcon size={18} className="font-semibold text-white" />
       </div>
-      {isUploading && (
+      {showProgress && (
         <div className="absolute left-0 top-0 z-10 ml-2 mt-2 flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold text-white bg-overlay">
           <div className="size-3 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-          Uploading
+          {label}
         </div>
       )}
       <Image

@@ -1,6 +1,8 @@
 import { ApiCast } from 'farcaster-client-data';
 import { useCallback } from 'react';
 
+import { protocolReact } from '../../../protocol/api';
+import { protocolSession } from '../../../protocol/runtime';
 import { useFarcasterApiClient } from '../../../providers/FarcasterApiClientProvider';
 import { useOptimisticallyUpdateCast } from '../optimistic';
 import { useInvalidateUserCasts } from '../queries/userCasts/useInvalidateUserCasts';
@@ -47,9 +49,18 @@ const useUndoRecast = () => {
       });
 
       try {
-        await apiClient.deleteRecast({
-          castHash: cast.hash,
-        });
+        if (protocolSession()) {
+          await protocolReact({
+            action: 'remove',
+            reaction: 'recast',
+            targetFid: cast.author.fid,
+            targetHash: cast.hash,
+          });
+        } else {
+          await apiClient.deleteRecast({
+            castHash: cast.hash,
+          });
+        }
 
         invalidateUserCasts({ fid: viewerFid });
       } catch (error) {

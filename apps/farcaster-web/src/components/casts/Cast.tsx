@@ -1,6 +1,7 @@
 import {
   useCastHasBlockedUrl,
   useGloballyCachedCast,
+  useProtocolCastEngagement,
 } from 'farcaster-client-hooks';
 import { FC, memo, useMemo } from 'react';
 
@@ -19,6 +20,7 @@ const Cast: FC<CastProps> = memo(
     isAdminGatedFeedCast = false,
   }) => {
     const cast = useGloballyCachedCast({ fallback: fallbackCast });
+    useProtocolCastEngagement(cast);
     const isAdmin = useIsAdmin();
     const castHasBlockedUrl = useCastHasBlockedUrl();
 

@@ -3,6 +3,7 @@ import { getNextPageCursor } from 'farcaster-client-data';
 import { useCallback } from 'react';
 
 import { MILLIS_PER_SECOND } from '../../../..';
+import { protocolReplacesHostedAuth } from '../../../../protocol/runtime';
 import { useFarcasterApiClient } from '../../../../providers/FarcasterApiClientProvider';
 import { useBatchMergeIntoGloballyCachedCasts } from '../globallyCachedCast';
 import { buildNotificationsForTabFetcher } from './buildNotificationsForTabFetcher';
@@ -17,6 +18,9 @@ export const usePrefetchNotificationsForTab = () => {
 
   return useCallback(
     (tab: string) => {
+      if (protocolReplacesHostedAuth(apiClient)) {
+        return Promise.resolve();
+      }
       const queryKey = buildNotificationsForTabKey({ tab });
 
       return queryClient.prefetchInfiniteQuery({

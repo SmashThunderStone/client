@@ -1,5 +1,6 @@
 import { FarcasterApiClient } from 'farcaster-client-data';
 
+import { protocolReplacesHostedAuth } from '../../../../protocol/runtime';
 import { BatchMergeIntoGloballyCachedCasts } from '../../../../types';
 import { wrapPaginatedFetcher } from '../../helpers';
 
@@ -13,6 +14,9 @@ const buildUserLikedCastsFetcher = ({
   fid: number;
 }) =>
   wrapPaginatedFetcher(async ({ pageParam: cursor }) => {
+    if (protocolReplacesHostedAuth(apiClient)) {
+      return { result: { casts: [] } };
+    }
     const response = await apiClient.getUserLikedCasts({
       cursor,
       fid,

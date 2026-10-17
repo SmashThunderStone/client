@@ -1,6 +1,8 @@
 import { ApiOpenGraphMetadata } from 'farcaster-client-data';
 import { useCallback } from 'react';
 
+import { protocolCreateCast } from '../../../protocol/api';
+import { protocolSession } from '../../../protocol/runtime';
 import { useFarcasterApiClient } from '../../../providers/FarcasterApiClientProvider';
 import { sleep } from '../../../utils/PromiseUtils';
 import { useInvalidateActiveChannelStreak } from '../queries/activeChannelStreak/useInvalidateActiveChannelStreak';
@@ -28,6 +30,7 @@ const useCreateCast = () => {
       castText,
       onCastAddedToList,
       parentCastHash,
+      parentAuthorFid,
       tokenKey,
       embeds,
       channelKey,
@@ -37,6 +40,7 @@ const useCreateCast = () => {
       fid: number;
       castText: string;
       parentCastHash?: string;
+      parentAuthorFid?: number;
       tokenKey?: string;
       onCastAddedToList?: () => void;
       embeds?: string[];
@@ -44,6 +48,23 @@ const useCreateCast = () => {
       clientProcessedOpenGraphMetadata?: ApiOpenGraphMetadata[];
       skipFeedRegenrationDelay?: boolean;
     }) => {
+      if (protocolSession()) {
+        const data = await protocolCreateCast({
+          text: castText,
+          embeds,
+          parentCastHash,
+          parentAuthorFid,
+        });
+        invalidateUserCasts({ fid });
+        invalidateUserCastsAndReplies({ fid });
+        invalidateProfileSnapCasts({ fid });
+        invalidateActiveChannelStreak({ fid });
+        if (typeof onCastAddedToList === 'function') {
+          onCastAddedToList();
+        }
+        return data;
+      }
+
       const clientRequestId = newClientRequestId();
 
       const response = await apiClient.createCast(

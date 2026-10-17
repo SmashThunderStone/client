@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import basicSsl from '@vitejs/plugin-basic-ssl';
+import { protocolMediaDevPlugin } from './protocolMediaDevPlugin.js';
 
 // Self-signed HTTPS is only for the local dev server (`pnpm start` / `pnpm dev`).
 // `vite build` and `vite preview` must stay on plain HTTP so the production
@@ -25,6 +26,11 @@ export default defineConfig(({ command }) => {
         },
       }),
       ...(httpsEnabled ? [basicSsl()] : []),
+      ...(command === 'serve' &&
+      !isPreview &&
+      process.env.VITE_PROTOCOL_DIRECT === '1'
+        ? [protocolMediaDevPlugin()]
+        : []),
     ],
     resolve: {
       alias: {
@@ -43,6 +49,12 @@ export default defineConfig(({ command }) => {
           changeOrigin: true,
           secure: true,
           rewrite: (requestPath) => requestPath.replace(/^\/fc-api/, '') || '/',
+        },
+        '/snap': {
+          target: 'https://haatz.quilibrium.com',
+          changeOrigin: true,
+          secure: true,
+          rewrite: (requestPath) => requestPath.replace(/^\/snap/, '') || '/',
         },
       },
     },

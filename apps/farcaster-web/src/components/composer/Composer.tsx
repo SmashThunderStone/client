@@ -46,14 +46,17 @@ import { MediaComposerPicker } from '~/components/composer/pickers/MediaComposer
 import { FarcasterProUnlockFeaturesModal } from '~/components/farcasterPro/FarcasterProUnlockFeaturedModal';
 import { DefaultButton } from '~/components/forms/buttons/DefaultButton';
 import { AlertModal } from '~/components/modals/AlertModal';
+import { protocolDirectEnabled } from '~/constants/protocol';
 import { useAnalytics } from '~/contexts/AnalyticsProvider';
 import {
   ComposerParentCastProvider,
   useComposer,
 } from '~/contexts/ComposerParentCastProvider';
 import { useUserAppContext } from '~/contexts/UserAppContextProvider';
+import { bindCastImageFile } from '~/hooks/data/castImageUploadProgress';
 import { useCurrentUser } from '~/hooks/data/useCurrentUser';
 import { useOptimisticUploadCloudflareImage } from '~/hooks/data/useOptimisticUploadCloudflareImage';
+import { useProtocolCastImageUpload } from '~/hooks/data/useProtocolCastImageUpload';
 import { useNavigateToConversation } from '~/hooks/navigation/useNavigateToConversation';
 import { CastComposerIntent } from '~/types';
 import { trackError } from '~/utils/errorUtils';
@@ -264,6 +267,10 @@ const ComposerInner = React.forwardRef<
     const navigateToConversation = useNavigateToConversation();
     const uploadOptimisticCloudflareImage =
       useOptimisticUploadCloudflareImage();
+    const uploadProtocolCastImage = useProtocolCastImageUpload();
+    const uploadCastImage = protocolDirectEnabled
+      ? uploadProtocolCastImage
+      : uploadOptimisticCloudflareImage;
 
     // Separate out the parent cast hash immediately when we need the intent so its not getting messed up back and forth with
     // random changes component lifecycle.
@@ -493,7 +500,7 @@ const ComposerInner = React.forwardRef<
     const castComposerEmbedsReturn = useCastComposerEmbeds({
       castLocalKeys: queuedCastLocalKeys,
       maxEmbedsLength: castEmbedLimit,
-      uploadCloudflareImage: uploadOptimisticCloudflareImage,
+      uploadCloudflareImage: uploadCastImage,
       trackError,
       resolveUrlEmbedsOnFailure,
       onImageUploadFailure: handleImageUploadFailure,
@@ -526,9 +533,18 @@ const ComposerInner = React.forwardRef<
 
     const addMediaEmbed = useCallback(
       async ({ file }: { file: File }) => {
-        const finalImageUploaderPromise = fetchImageUploadUrl();
-
         const fileType = getEmbedType(file.name);
+        if (protocolDirectEnabled && fileType === 'video') {
+          toast({
+            message: 'Video upload is not available in SmashCast direct mode.',
+            type: 'error',
+            toastId: 'protocol-video-upload',
+          });
+          return;
+        }
+        const finalImageUploaderPromise = protocolDirectEnabled
+          ? undefined
+          : fetchImageUploadUrl();
 
         if (fileType === 'video') {
           // Use a <video> element to check the duration of the video
@@ -571,6 +587,9 @@ const ComposerInner = React.forwardRef<
           });
         } else {
           const image = await probeImage(file);
+          if (protocolDirectEnabled) {
+            bindCastImageFile(file, image.src);
+          }
 
           dispatch({
             type: 'AddImage',
@@ -900,6 +919,17 @@ const ComposerInner = React.forwardRef<
           const results = await Promise.all(imagePromises);
 
           for (const result of results) {
+            if (protocolDirectEnabled) {
+              const body = (await result.json().catch(() => null)) as {
+                success?: boolean;
+                error?: string;
+              } | null;
+              if (!result.ok || !body?.success) {
+                throw new Error(body?.error || 'Image upload was rejected');
+              }
+              continue;
+            }
+
             const response: {
               success: boolean;
               result: { variants: string[] };
@@ -914,8 +944,14 @@ const ComposerInner = React.forwardRef<
             }
           }
         } catch (e) {
+          const message =
+            e instanceof Error && e.message
+              ? e.message
+              : 'Failed to upload image for the cast';
+          // eslint-disable-next-line no-console -- the toast must show the server message
+          console.error('Failed to upload image for the cast', e);
           toast({
-            message: 'Failed to upload image for the cast',
+            message,
             type: 'error',
             toastId: 'upload-image-failed',
           });
@@ -1000,6 +1036,7 @@ const ComposerInner = React.forwardRef<
           }
 
           let nextParentCastHash = parentCastHash;
+          let nextParentAuthorFid = initialIntent?.parentCast?.author.fid;
           let firstData;
           const publishedReplies: {
             parentCastHash: string;
@@ -1023,6 +1060,10 @@ const ComposerInner = React.forwardRef<
               fid: currentUser.fid,
               castText: getText(queuedCast),
               parentCastHash: castParentHash,
+              parentAuthorFid:
+                typeof castParentHash !== 'undefined'
+                  ? nextParentAuthorFid
+                  : undefined,
               embeds,
               channelKey,
             });
@@ -1074,6 +1115,7 @@ const ComposerInner = React.forwardRef<
                 : undefined),
             });
             nextParentCastHash = hash;
+            nextParentAuthorFid = authorFid;
           }
 
           const firstResult = firstData?.result;
@@ -1239,6 +1281,7 @@ const ComposerInner = React.forwardRef<
       onForceCloseWrappingModal,
       optimisticallyAddNewCastToThread,
       parentCastHash,
+      initialIntent?.parentCast?.author.fid,
       initialIncludeReason,
       processedEmbeds,
       queuedCasts,

@@ -18,6 +18,9 @@ import React, {
   useMemo,
 } from 'react';
 
+import { type ProtocolSession, setProtocolRuntime } from '../protocol/runtime';
+
+export type { ProtocolSession };
 import { GlobalCacheUsageProvider } from './GlobalCacheUsageProvider';
 import { PurgedProvider } from './PurgedProvider';
 
@@ -80,6 +83,11 @@ export type FarcasterApiClientProviderProps = {
   getSessionId?: () => string | undefined;
   timeoutRetryDecayFactor?: number;
   isOffline?: boolean;
+  protocol?: {
+    enabled: boolean;
+    hubUrl: string;
+    getSession: () => ProtocolSession | null;
+  };
 };
 
 const FarcasterApiClientProvider = memo(
@@ -101,7 +109,13 @@ const FarcasterApiClientProvider = memo(
     getSessionId,
     timeoutRetryDecayFactor,
     isOffline,
+    protocol,
   }: FarcasterApiClientProviderProps) => {
+    setProtocolRuntime(
+      protocol?.enabled
+        ? { hubUrl: protocol.hubUrl, getSession: protocol.getSession }
+        : null,
+    );
     const options = useMemo(() => {
       const next: Partial<FarcasterApiClientOptions> = {
         baseUrl,

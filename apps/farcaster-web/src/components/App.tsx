@@ -5,12 +5,14 @@ import {
   persistQueryClient,
   PersistQueryClientOptions,
 } from '@tanstack/react-query-persist-client';
+import { isFarcasterApiError } from 'farcaster-client-data';
 import { BlockedDomainsProvider, PubSubProvider } from 'farcaster-client-hooks';
 import React, { FC, ReactNode, Suspense } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { WagmiProvider } from 'wagmi';
 
 import { Router } from '~/components/routing/Router';
+import { protocolDirectEnabled } from '~/constants/protocol';
 import { AnalyticsProvider } from '~/contexts/AnalyticsProvider';
 import { AuthProvider, useAuth } from '~/contexts/AuthProvider';
 import { DirectCastToTakeActionProvider } from '~/contexts/DirectCastToTakeActionProvider';
@@ -22,6 +24,7 @@ import { MiniAppProvider } from '~/contexts/MiniAppProvider';
 import { MinimizableWindowProvider } from '~/contexts/MinimizableWindowProvider';
 import { PersistQueryClientInstanceProvider } from '~/contexts/PersistQueryClientInstanceProvider';
 import { PopStateProvider } from '~/contexts/PopStateProvider';
+import { ProtocolSessionProvider } from '~/contexts/ProtocolSessionProvider';
 import { RecentFetchProvider } from '~/contexts/RecentFetchProvider';
 import { ScrollProvider } from '~/contexts/ScrollProvider';
 import { StandaloneModeProvider } from '~/contexts/StandaloneModeProvider';
@@ -48,7 +51,16 @@ const AuthGatedBlockedDomainsProvider: FC<{ children: ReactNode }> = ({
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 2,
+      retry: (failureCount, error) => {
+        if (
+          protocolDirectEnabled &&
+          isFarcasterApiError(error) &&
+          error.status === 401
+        ) {
+          return false;
+        }
+        return failureCount < 2;
+      },
       refetchOnMount: true,
       refetchOnWindowFocus: false,
       staleTime: 1000 * 60 * 3,
@@ -96,28 +108,30 @@ const App: FC = () => {
                                   <WebFarcasterApiClientProvider>
                                     {/* AuthProvider must be a child of QueryClientProvider, AuthProvider, WebFarcasterApiClientProvider, and FeatureFlagProvider */}
                                     <AuthProvider>
-                                      <AuthGatedBlockedDomainsProvider>
-                                        <ThemeProvider>
-                                          <AnalyticsProvider>
-                                            <SnapWindowErrorListenerInstaller />
-                                            <InteractedSnapUrlsWebProvider>
-                                              <PubSubProvider>
-                                                <VideoPlayStatusProvider>
-                                                  <DirectCastToTakeActionProvider>
-                                                    <MiniAppProvider>
-                                                      <MinimizableWindowProvider>
-                                                        <BrowserRouter>
-                                                          <Router />
-                                                        </BrowserRouter>
-                                                      </MinimizableWindowProvider>
-                                                    </MiniAppProvider>
-                                                  </DirectCastToTakeActionProvider>
-                                                </VideoPlayStatusProvider>
-                                              </PubSubProvider>
-                                            </InteractedSnapUrlsWebProvider>
-                                          </AnalyticsProvider>
-                                        </ThemeProvider>
-                                      </AuthGatedBlockedDomainsProvider>
+                                      <ProtocolSessionProvider>
+                                        <AuthGatedBlockedDomainsProvider>
+                                          <ThemeProvider>
+                                            <AnalyticsProvider>
+                                              <SnapWindowErrorListenerInstaller />
+                                              <InteractedSnapUrlsWebProvider>
+                                                <PubSubProvider>
+                                                  <VideoPlayStatusProvider>
+                                                    <DirectCastToTakeActionProvider>
+                                                      <MiniAppProvider>
+                                                        <MinimizableWindowProvider>
+                                                          <BrowserRouter>
+                                                            <Router />
+                                                          </BrowserRouter>
+                                                        </MinimizableWindowProvider>
+                                                      </MiniAppProvider>
+                                                    </DirectCastToTakeActionProvider>
+                                                  </VideoPlayStatusProvider>
+                                                </PubSubProvider>
+                                              </InteractedSnapUrlsWebProvider>
+                                            </AnalyticsProvider>
+                                          </ThemeProvider>
+                                        </AuthGatedBlockedDomainsProvider>
+                                      </ProtocolSessionProvider>
                                     </AuthProvider>
                                   </WebFarcasterApiClientProvider>
                                 </LinkifyProvider>

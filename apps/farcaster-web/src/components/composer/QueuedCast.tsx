@@ -34,6 +34,7 @@ import { useTokenMentionsComposerPlugin } from '~/components/composer/plugins/To
 import { ConfirmationModal } from '~/components/modals/ConfirmationModal';
 import { mdAvatarDiameter } from '~/constants/avatar';
 import { useUserAppContext } from '~/contexts/UserAppContextProvider';
+import { abortCastImageUpload } from '~/hooks/data/castImageUploadProgress';
 import { useCurrentUser } from '~/hooks/data/useCurrentUser';
 import { useIsDarkMode } from '~/hooks/useIsDarkMode';
 import { CastComposerIntent } from '~/types';
@@ -842,6 +843,7 @@ const QueuedCast: FC<QueuedCastProps> = memo(
                         castLocalKey: localKey,
                         type: 'image',
                       });
+                      abortCastImageUpload(image.src);
                       dispatch({
                         type: 'RemoveImage',
                         castLocalKey: localKey,

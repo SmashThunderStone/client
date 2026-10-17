@@ -17,6 +17,7 @@ import partialRight from 'lodash/partialRight';
 import values from 'lodash/values';
 import { useCallback, useMemo, useRef } from 'react';
 
+import { protocolHubUrl, protocolSession } from '../../../../protocol/runtime';
 import { useFarcasterApiClient } from '../../../../providers/FarcasterApiClientProvider';
 import { useInternalEventing } from '../../../../providers/InternalEventingProvider';
 import { usePurged } from '../../../../providers/PurgedProvider';
@@ -56,10 +57,17 @@ const useFeedItems = ({
   const batchUpdateGloballyCachedCast = useBatchMergeIntoGloballyCachedCasts();
   const internalEventsTracker = useInternalEventing();
 
-  const queryKey = useMemo(
-    () => buildFeedItemsKey({ feedKey, feedType, sortMode: sortMode?.type }),
-    [feedKey, feedType, sortMode?.type],
-  );
+  const protocolFid = protocolHubUrl()
+    ? (protocolSession()?.fid ?? 0)
+    : undefined;
+  const queryKey = useMemo(() => {
+    const key = buildFeedItemsKey({
+      feedKey,
+      feedType,
+      sortMode: sortMode?.type,
+    });
+    return protocolFid === undefined ? key : [...key, 'protocol', protocolFid];
+  }, [feedKey, feedType, protocolFid, sortMode?.type]);
 
   const prevParams = useRef<FeedItemsPageParam | undefined>(undefined);
   const nextParams = useRef<FeedItemsPageParam | undefined>(undefined);
@@ -367,10 +375,17 @@ const useNonSuspenseFeedItems = ({
   const batchUpdateGloballyCachedCast = useBatchMergeIntoGloballyCachedCasts();
   const internalEventsTracker = useInternalEventing();
 
-  const queryKey = useMemo(
-    () => buildFeedItemsKey({ feedKey, feedType, sortMode: sortMode?.type }),
-    [feedKey, feedType, sortMode?.type],
-  );
+  const protocolFid = protocolHubUrl()
+    ? (protocolSession()?.fid ?? 0)
+    : undefined;
+  const queryKey = useMemo(() => {
+    const key = buildFeedItemsKey({
+      feedKey,
+      feedType,
+      sortMode: sortMode?.type,
+    });
+    return protocolFid === undefined ? key : [...key, 'protocol', protocolFid];
+  }, [feedKey, feedType, protocolFid, sortMode?.type]);
 
   const prevParams = useRef<FeedItemsPageParam | undefined>(undefined);
   const nextParams = useRef<FeedItemsPageParam | undefined>(undefined);

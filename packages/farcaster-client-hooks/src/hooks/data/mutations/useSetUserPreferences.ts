@@ -5,6 +5,8 @@ import {
 } from 'farcaster-client-data';
 import { useCallback } from 'react';
 
+import { protocolUserPreferences } from '../../../protocol/api';
+import { protocolReplacesHostedAuth } from '../../../protocol/runtime';
 import { useFarcasterApiClient } from '../../../providers/FarcasterApiClientProvider';
 import { buildUserPreferencesKey } from '../queries/userPreferences/buildUserPreferencesKey';
 import { useInvalidateUserPreferences } from '../queries/userPreferences/useInvalidateUsePreferences';
@@ -41,12 +43,27 @@ const useOptimisticSetUserPreferences = () => {
 
 const useSetUserPreferences = (setOptimistically = false) => {
   const { apiClient } = useFarcasterApiClient();
+  const queryClient = useQueryClient();
   const invalidateUserPreferences = useInvalidateUserPreferences();
   const setOptimisticSetUserPreferences = useOptimisticSetUserPreferences();
   return useCallback(
     async ({ preferences }: { preferences: ApiUserPreferences }) => {
       if (setOptimistically) {
         setOptimisticSetUserPreferences({ preferences });
+      }
+
+      if (protocolReplacesHostedAuth(apiClient)) {
+        const current =
+          queryClient.getQueryData<ApiGetUserPreferences200Response>(
+            buildUserPreferencesKey(),
+          ) ?? protocolUserPreferences();
+        const next: ApiGetUserPreferences200Response = {
+          result: {
+            preferences: { ...current.result.preferences, ...preferences },
+          },
+        };
+        queryClient.setQueryData(buildUserPreferencesKey(), next);
+        return next;
       }
 
       const response = await apiClient.setUserPreferences({ preferences });
@@ -58,6 +75,7 @@ const useSetUserPreferences = (setOptimistically = false) => {
     [
       apiClient,
       invalidateUserPreferences,
+      queryClient,
       setOptimisticSetUserPreferences,
       setOptimistically,
     ],

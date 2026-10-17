@@ -9,14 +9,25 @@ let disabled = false;
 let posthogInitialized = false;
 let hasUserId = false;
 
+const posthogKeyConfigured =
+  posthogApiKey.length > 0 && !posthogApiKey.includes('REPLACE_ME');
+
 const Analytics = {
   init: (): void => {
+    if (!posthogKeyConfigured) {
+      disabled = true;
+      return;
+    }
     if (!disabled) {
       Analytics.enable();
     }
   },
 
   enable: (): void => {
+    if (!posthogKeyConfigured) {
+      disabled = true;
+      return;
+    }
     disabled = false;
 
     if (!posthogInitialized) {

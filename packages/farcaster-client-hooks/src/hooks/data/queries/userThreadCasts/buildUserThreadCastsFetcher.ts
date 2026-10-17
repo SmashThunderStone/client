@@ -4,6 +4,8 @@ import {
   FarcasterApiClient,
 } from 'farcaster-client-data';
 
+import { protocolThread } from '../../../../protocol/api';
+import { protocolReplacesHostedAuth } from '../../../../protocol/runtime';
 import {
   BatchMergeIntoGloballyCachedCasts,
   CastUpdates,
@@ -22,6 +24,16 @@ const buildUserThreadCastsFetcher = ({
   username: string;
 }) =>
   wrapPaginatedFetcher(async ({ pageParam: cursor }) => {
+    if (protocolReplacesHostedAuth(apiClient)) {
+      const page = await protocolThread({
+        username,
+        hashPrefix: castHashPrefix,
+      });
+      page.result.casts.forEach((cast) => {
+        batchMergeIntoGloballyCachedCasts({ batchUpdates: [cast] });
+      });
+      return page;
+    }
     const response = await apiClient.getUserThreadCasts({
       castHashPrefix,
       cursor,

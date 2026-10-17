@@ -1,5 +1,7 @@
 import { CastHashPrefix, FarcasterApiClient } from 'farcaster-client-data';
 
+import { protocolThread } from '../../../../protocol/api';
+import { protocolReplacesHostedAuth } from '../../../../protocol/runtime';
 import { MergeIntoGloballyCachedCast } from '../../../../types';
 import { wrapPaginatedFetcher } from '../../helpers';
 
@@ -15,6 +17,14 @@ const buildUserCastFetcher = ({
   username: string;
 }) =>
   wrapPaginatedFetcher(async () => {
+    if (protocolReplacesHostedAuth(apiClient)) {
+      const thread = await protocolThread({ username, hashPrefix });
+      const cast = thread.result.casts[0];
+      if (cast) {
+        mergeIntoGloballyCachedCast({ updates: cast });
+      }
+      return { result: { cast } };
+    }
     const response = await apiClient.getUserCast({
       username,
       hashPrefix,

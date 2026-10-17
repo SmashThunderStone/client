@@ -1,8 +1,10 @@
 import { FC, memo } from 'react';
 
 import { LoginWithMobile } from '~/components/login/LoginWithMobile';
+import { LoginWithWallet } from '~/components/login/LoginWithWallet';
 import { DefaultModalContainer } from '~/components/modals/DefaultModalContainer';
 import { Modal } from '~/components/modals/Modal';
+import { protocolDirectEnabled } from '~/constants/protocol';
 
 type LoginModalProps = {
   onClose: () => void;
@@ -19,6 +21,12 @@ const LoginModal: FC<LoginModalProps> = memo(({ onClose }) => {
               e.stopPropagation();
             }}
           >
+            {protocolDirectEnabled && (
+              <>
+                <LoginWithWallet onClose={onClose} />
+                <div className="my-4 h-px w-full bg-white/15" />
+              </>
+            )}
             <LoginWithMobile onClose={onClose} />
           </div>
         </div>

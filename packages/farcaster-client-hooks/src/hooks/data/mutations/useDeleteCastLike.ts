@@ -2,6 +2,8 @@ import { ApiCast } from 'farcaster-client-data';
 import { useCallback } from 'react';
 
 import { UpdateCastLikeError } from '../../../errors';
+import { protocolReact, protocolRemoved } from '../../../protocol/api';
+import { protocolSession } from '../../../protocol/runtime';
 import { useFarcasterApiClient } from '../../../providers/FarcasterApiClientProvider';
 import { useOptimisticallyUpdateCast } from '../optimistic/useOptimisticallyUpdateCast';
 
@@ -33,6 +35,15 @@ const useDeleteCastLike = () => {
       });
 
       try {
+        if (protocolSession()) {
+          await protocolReact({
+            action: 'remove',
+            reaction: 'like',
+            targetFid: cast.author.fid,
+            targetHash: cast.hash,
+          });
+          return protocolRemoved();
+        }
         const response = await apiClient.deleteCastLike({
           castHash: cast.hash,
         });

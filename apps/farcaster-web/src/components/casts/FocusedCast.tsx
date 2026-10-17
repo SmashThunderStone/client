@@ -144,6 +144,7 @@ const FocusedCastContent: React.FC<FocusedCastProps> = React.memo(
     return (
       <div
         ref={inViewRef}
+        id={`cast:${cast.hash}`}
         className={classNames(
           'relative',
           isAdminGatedFeedCast && 'admin-gated-feed-cast',

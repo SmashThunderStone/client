@@ -4,6 +4,7 @@ import {
   FarcasterApiClient,
 } from 'farcaster-client-data';
 
+import { protocolReplacesHostedAuth } from '../../../../protocol/runtime';
 import { MergeIntoGloballyCachedDirectCastInbox } from '../../../../types';
 import { wrapPaginatedFetcher } from '../../helpers';
 
@@ -19,6 +20,17 @@ const buildDirectCastInboxByAccountFetcher = ({
   filter?: ApiDirectCastConversationFilter;
 }) =>
   wrapPaginatedFetcher(async ({ pageParam: cursor }) => {
+    if (protocolReplacesHostedAuth(apiClient)) {
+      return {
+        result: {
+          hasArchived: false,
+          hasUnreadRequests: false,
+          requestsCount: 0,
+          voidCount: 0,
+          conversations: [],
+        },
+      };
+    }
     const response = await apiClient.getDirectCastInbox({
       cursor: cursor,
       limit: 15,
