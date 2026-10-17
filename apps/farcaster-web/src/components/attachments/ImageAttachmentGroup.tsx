@@ -7,6 +7,7 @@ import {
 } from 'farcaster-client-hooks';
 import React from 'react';
 
+import { MeasuredCastImage } from '~/components/attachments/MeasuredCastImage';
 import { Image as ImageRenderComponent } from '~/components/images/Image';
 import { useFullScreenImages } from '~/hooks/casts/useCastBody';
 
@@ -42,14 +43,27 @@ const ImageAttachmentGroup: React.FC<ImageAttachmentGroupProps> = React.memo(
     const { open } = useFullScreenImages();
 
     const imagesToRender = React.useMemo(() => {
+      const knownIndexes: number[] = [];
+      const knownMedias = medias.filter((media, index) => {
+        if (media.width > 0 && media.height > 0) {
+          knownIndexes.push(index);
+          return true;
+        }
+        return false;
+      });
       // Hard-code web client pixel density to 3 for now since users are
       // reporting some blurry rendering with pixelDensity of < 3.
-      return processMediasForRendering({
-        medias,
+      const processed = processMediasForRendering({
+        medias: knownMedias,
         pixelDensity: 3,
         blockAnimated: false,
         increasedWidth: true,
       });
+      const byIndex = new Map<number, (typeof processed)[number]>();
+      processed.forEach((image, index) => {
+        byIndex.set(knownIndexes[index], image);
+      });
+      return byIndex;
     }, [medias]);
 
     // In a mixed carousel (image next to a snap/OG), use the shared tile height
@@ -57,9 +71,34 @@ const ImageAttachmentGroup: React.FC<ImageAttachmentGroupProps> = React.memo(
     // sibling media should not grow with that expanded row.
     const fillTile = snapContext && noShrink && ignoreAspectRatio;
 
+    const openImage = (event: React.MouseEvent, imageIndex: number) => {
+      trackCastClick({ type: CastClickType.Image });
+      event.stopPropagation();
+      open?.({ initialIndex: carouselIndex ?? imageIndex });
+    };
+
     return (
       <>
-        {imagesToRender.map((image, imageIndex) => {
+        {medias.map((media, imageIndex) => {
+          const image = imagesToRender.get(imageIndex);
+          if (!image) {
+            return (
+              <MeasuredCastImage
+                key={`${media.staticRaster}-${imageIndex}`}
+                src={media.staticRaster}
+                maxWidth={maxWidth ?? width}
+                row={typeof height === 'number'}
+                rowHeight={height}
+                onClick={(event) => {
+                  openImage(event, imageIndex);
+                }}
+                onMouseOver={() => {
+                  const imageToPreload = new Image();
+                  imageToPreload.src = media.staticRaster;
+                }}
+              />
+            );
+          }
           if (!snapContext) {
             return (
               <ImageRenderComponent

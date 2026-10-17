@@ -37,8 +37,8 @@ const ImageAttachments: React.FC<ImageAttachmentsProps> = ({
       return {
         version: '2',
         staticRaster: image.url,
-        height: 1000,
-        width: 1000,
+        height: 0,
+        width: 0,
       } satisfies ApiMediaV2;
     });
 
