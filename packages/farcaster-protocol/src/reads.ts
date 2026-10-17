@@ -1,6 +1,14 @@
 import { fromFarcasterTime } from '@farcaster/core';
 
 import { embedsFromCastBody, HubEmbed } from './embeds';
+import {
+  getReactionEngagement,
+  getReplyTree,
+  hubHashParam,
+  type HubReplyNode,
+  lookupCastId,
+  rememberCastId,
+} from './engagement';
 import { SnapchainHub } from './hub';
 import { unwrap } from './result';
 
@@ -62,6 +70,8 @@ type MessagePage = {
 
 const COUNT_PAGE_SIZE = 1000;
 const COUNT_PAGE_CAP = 5;
+const PROFILE_CACHE_MS = 5 * 60_000;
+const profileCache = new Map<number, { at: number; profile: HubProfile }>();
 
 type UsernameProof = {
   name?: string;
@@ -73,6 +83,10 @@ export async function getLightProfile(
   hubUrl: string,
   fid: number,
 ): Promise<HubProfile> {
+  const cached = profileCache.get(fid);
+  if (cached && Date.now() - cached.at < PROFILE_CACHE_MS) {
+    return cached.profile;
+  }
   const hub = new SnapchainHub(hubUrl);
   const [userData, proofs] = await Promise.all([
     hub.getJson<MessagePage>(`/v1/userDataByFid?fid=${fid}&pageSize=100`),
@@ -95,7 +109,7 @@ export async function getLightProfile(
   const username =
     fnameProof?.name || values.get('USER_DATA_TYPE_USERNAME') || undefined;
 
-  return {
+  const profile: HubProfile = {
     fid,
     username,
     displayName:
@@ -108,6 +122,8 @@ export async function getLightProfile(
     followingCount: 0,
     countsPartial: false,
   };
+  profileCache.set(fid, { at: Date.now(), profile });
+  return profile;
 }
 
 export async function getProfileByFid(
@@ -256,7 +272,13 @@ async function countMessages(
 const FEED_FOLLOW_CAP = 24;
 const FEED_CASTS_PER_FID = 4;
 const FEED_CACHE_MS = 60_000;
-const THREAD_SCAN_PAGES = 4;
+const THREAD_SCAN_PAGES = 16;
+
+function hashMatchesPrefix(hash: string, hashPrefix: string): boolean {
+  const prefix = hashPrefix.toLowerCase();
+  const normalized = prefix.startsWith('0x') ? prefix : `0x${prefix}`;
+  return hash.toLowerCase().startsWith(normalized);
+}
 
 type FeedCache = {
   fid: number;
@@ -317,14 +339,18 @@ function messageToCast(
         hash: body.parentCastId.hash || '',
       }
     : undefined;
-  return {
-    hash: message.hash,
+  const cast: HubCast = {
+    hash: hubHashParam(message.hash),
     fid,
     text: body?.text || '',
     timestampMs: unwrap(fromFarcasterTime(message.data.timestamp), 'cast time'),
-    parent,
     embeds: embedsFromCastBody(body),
   };
+  if (parent?.hash) {
+    cast.parent = { fid: parent.fid, hash: hubHashParam(parent.hash) };
+  }
+  rememberCastId(cast.fid, cast.hash);
+  return cast;
 }
 
 export async function getCastById(
@@ -334,7 +360,7 @@ export async function getCastById(
 ): Promise<HubCast | null> {
   const hub = new SnapchainHub(hubUrl);
   const message = await hub.getOptionalJson<HubMessage>(
-    `/v1/castById?fid=${fid}&hash=${encodeURIComponent(hash)}`,
+    `/v1/castById?fid=${fid}&hash=${encodeURIComponent(hubHashParam(hash))}`,
   );
   if (!message) {
     return null;
@@ -394,28 +420,42 @@ export function selectFeedCasts(
   return selected;
 }
 
+export type HubThread = {
+  author: HubProfile;
+  root: HubCast;
+  replyCount: number;
+  replies: HubReplyNode[];
+  likeCount: number;
+  recastCount: number;
+  viewerLiked: boolean;
+  viewerRecast: boolean;
+};
+
 export async function getThreadByUsername(
   hubUrl: string,
   username: string,
   hashPrefix: string,
-): Promise<{ author: HubProfile; casts: HubCast[] } | null> {
+  viewerFid?: number,
+): Promise<HubThread | null> {
   const author = await getProfileByUsername(hubUrl, username);
   if (!author) {
     return null;
   }
-  const hub = new SnapchainHub(hubUrl);
-  const prefix = hashPrefix.toLowerCase();
-  let pageToken: string | undefined;
+  const known = lookupCastId(author.fid, hashPrefix);
   let root: HubCast | undefined;
+  if (known && hashMatchesPrefix(known.hash, hashPrefix)) {
+    root =
+      (await getCastById(hubUrl, known.fid, known.hash).catch(() => null)) ??
+      undefined;
+  }
+  let pageToken: string | undefined;
   for (let page = 0; page < THREAD_SCAN_PAGES && !root; page += 1) {
     const casts = await getCastsByFid(hubUrl, author.fid, {
       pageToken,
       pageSize: 50,
       replies: 'include',
     });
-    root = casts.casts.find((cast) =>
-      cast.hash.toLowerCase().startsWith(prefix),
-    );
+    root = casts.casts.find((cast) => hashMatchesPrefix(cast.hash, hashPrefix));
     pageToken = casts.nextPageToken;
     if (!pageToken) {
       break;
@@ -424,18 +464,28 @@ export async function getThreadByUsername(
   if (!root) {
     return null;
   }
-  let replies: HubCast[] = [];
-  try {
-    const parent = await hub.getJson<MessagePage>(
-      `/v1/castsByParent?fid=${root.fid}&hash=${encodeURIComponent(root.hash)}&pageSize=20&reverse=true`,
-    );
-    replies = (parent.messages ?? [])
-      .map(messageToCast)
-      .filter((cast): cast is HubCast => cast !== null);
-  } catch {
-    replies = [];
-  }
-  return { author, casts: [root, ...replies] };
+  const [tree, reactions] = await Promise.all([
+    getReplyTree(hubUrl, root.fid, root.hash).catch(() => ({
+      nodes: [] as HubReplyNode[],
+      replyCount: 0,
+    })),
+    getReactionEngagement(hubUrl, root.fid, root.hash, viewerFid).catch(() => ({
+      likeCount: 0,
+      recastCount: 0,
+      viewerLiked: false,
+      viewerRecast: false,
+    })),
+  ]);
+  return {
+    author,
+    root,
+    replyCount: tree.replyCount,
+    replies: tree.nodes,
+    likeCount: reactions.likeCount,
+    recastCount: reactions.recastCount,
+    viewerLiked: reactions.viewerLiked,
+    viewerRecast: reactions.viewerRecast,
+  };
 }
 
 async function mapPool<T, R>(

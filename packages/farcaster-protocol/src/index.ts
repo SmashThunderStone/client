@@ -10,6 +10,18 @@ export {
 } from './constants';
 export type { EmbedKind, HubEmbed } from './embeds';
 export { classifyEmbedUrl, embedsFromCastBody } from './embeds';
+export type { CastEngagement, HubReplyNode } from './engagement';
+export {
+  getCastEngagement,
+  getReactionEngagement,
+  getReplyPage,
+  getReplyTree,
+  hubHashParam,
+  lookupCastId,
+  lookupFidForHash,
+  rememberCastId,
+  tallyReactions,
+} from './engagement';
 export { fidOfAddress } from './fid';
 export {
   getSignersByFid,
@@ -52,7 +64,7 @@ export {
   getHubNotifications,
   NOTIFICATION_CAST_LIMIT,
 } from './notifications';
-export type { HubCast, HubProfile } from './reads';
+export type { HubCast, HubProfile, HubThread } from './reads';
 export { hubMessageToCast } from './reads';
 export {
   getCastById,

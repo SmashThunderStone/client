@@ -32,6 +32,7 @@ import {
   castReadBackPath,
   classifyEmbedUrl,
   getCastById,
+  getCastEngagement,
   getCastsByFid,
   getChronologicalFeed,
   getFollowingPage,
@@ -39,11 +40,16 @@ import {
   getLightProfile,
   getProfileByFid,
   getProfileByUsername,
+  getReactionEngagement,
+  getReplyPage,
   getThreadByUsername,
   HubCast,
   HubEmbed,
   HubProfile,
+  HubReplyNode,
+  HubThread,
   linkReadBackPath,
+  lookupFidForHash,
   messageHash,
   publishMessage,
   reactionReadBackPath,
@@ -325,6 +331,7 @@ export function hubCastToApiCast(
     reactions: { count: 0 },
     recasts: { count: 0 },
     watches: { count: 0 },
+    viewerContext: {},
   };
 }
 
@@ -809,6 +816,43 @@ export async function protocolHomeFeed(params: {
   };
 }
 
+function flattenThread(thread: HubThread): Array<{
+  cast: HubCast;
+  replyCount: number;
+}> {
+  const flat: Array<{ cast: HubCast; replyCount: number }> = [
+    { cast: thread.root, replyCount: thread.replyCount },
+  ];
+  const walk = (nodes: HubReplyNode[]) => {
+    for (const node of nodes) {
+      flat.push({ cast: node.cast, replyCount: node.replyCount });
+      walk(node.children);
+    }
+  };
+  walk(thread.replies);
+  return flat;
+}
+
+async function authorsForFids(
+  hubUrl: string,
+  fids: number[],
+  seed?: Map<number, ApiUser>,
+): Promise<Map<number, ApiUser>> {
+  const authors = seed ?? new Map<number, ApiUser>();
+  await Promise.all(
+    fids
+      .filter((fid) => !authors.has(fid))
+      .map(async (fid) => {
+        const profile = await getLightProfile(hubUrl, fid).catch(() => null);
+        authors.set(
+          fid,
+          profile ? hubProfileToApiUser(profile) : fallbackUser(fid),
+        );
+      }),
+  );
+  return authors;
+}
+
 export async function protocolThread(params: {
   username: string;
   hashPrefix: string;
@@ -821,46 +865,171 @@ export async function protocolThread(params: {
     hubUrl,
     params.username,
     params.hashPrefix,
+    protocolSession()?.fid,
   );
   if (!thread) {
     return { result: { casts: [] } };
   }
-  const authors = new Map<number, ApiUser>();
-  authors.set(thread.author.fid, hubProfileToApiUser(thread.author));
-  await Promise.all(
-    [...new Set(thread.casts.map((cast) => cast.fid))]
-      .filter((fid) => !authors.has(fid))
-      .map(async (fid) => {
-        const profile = await getLightProfile(hubUrl, fid).catch(() => null);
-        authors.set(
-          fid,
-          profile
-            ? hubProfileToApiUser(profile)
-            : {
-                fid,
-                displayName: `FID ${fid}`,
-                profile: { bio: { text: '', mentions: [] } },
-                followerCount: 0,
-                followingCount: 0,
-              },
-        );
-      }),
+  const flat = flattenThread(thread);
+  const authors = await authorsForFids(
+    hubUrl,
+    flat.map((item) => item.cast.fid),
+    new Map([[thread.author.fid, hubProfileToApiUser(thread.author)]]),
   );
-  const quotes = await loadQuotes(hubUrl, thread.casts, authors);
+  const quotes = await loadQuotes(
+    hubUrl,
+    flat.map((item) => item.cast),
+    authors,
+  );
   return {
     result: {
-      casts: thread.casts.map((cast) => {
+      casts: flat.map((item) => {
         const apiCast = hubCastToApiCast(
-          cast,
-          authors.get(cast.fid) ?? fallbackUser(cast.fid),
+          item.cast,
+          authors.get(item.cast.fid) ?? fallbackUser(item.cast.fid),
           quotes,
         );
-        if (cast.hash === thread.casts[0]?.hash) {
-          apiCast.replies = { count: 0 };
+        const parentFid = item.cast.parent?.fid;
+        if (parentFid && authors.has(parentFid)) {
+          apiCast.parentAuthor = authors.get(parentFid);
+        }
+        apiCast.replies = { count: item.replyCount };
+        if (item.cast.hash === thread.root.hash) {
+          apiCast.reactions = { count: thread.likeCount };
+          apiCast.recasts = { count: thread.recastCount };
+          apiCast.viewerContext = {
+            reacted: thread.viewerLiked,
+            recast: thread.viewerRecast,
+          };
         }
         return apiCast;
       }),
     },
+  };
+}
+
+export async function protocolCastStats(params: {
+  fid: number;
+  hash: string;
+}): Promise<{
+  replies: ApiCast['replies'];
+  reactions: ApiCast['reactions'];
+  recasts: ApiCast['recasts'];
+  viewerContext: NonNullable<ApiCast['viewerContext']>;
+  preview?: ApiCast;
+}> {
+  const hubUrl = protocolHubUrl();
+  if (!hubUrl) {
+    return {
+      replies: { count: 0 },
+      reactions: { count: 0 },
+      recasts: { count: 0 },
+      viewerContext: {},
+    };
+  }
+  const stats = await getCastEngagement(
+    hubUrl,
+    params.fid,
+    params.hash,
+    protocolSession()?.fid,
+  );
+  let preview: ApiCast | undefined;
+  if (stats.preview) {
+    const authors = await authorsForFids(hubUrl, [stats.preview.fid]);
+    preview = hubCastToApiCast(
+      stats.preview,
+      authors.get(stats.preview.fid) ?? fallbackUser(stats.preview.fid),
+    );
+    if (!preview.parentHash) {
+      preview.parentHash = params.hash;
+    }
+  }
+  return {
+    replies: { count: stats.replyCount },
+    reactions: { count: stats.likeCount },
+    recasts: { count: stats.recastCount },
+    viewerContext: {
+      reacted: stats.viewerLiked,
+      recast: stats.viewerRecast,
+    },
+    preview,
+  };
+}
+
+export async function protocolReactionStats(params: {
+  fid: number;
+  hash: string;
+}): Promise<{
+  reactions: ApiCast['reactions'];
+  recasts: ApiCast['recasts'];
+  viewerContext: NonNullable<ApiCast['viewerContext']>;
+}> {
+  const hubUrl = protocolHubUrl();
+  if (!hubUrl) {
+    return {
+      reactions: { count: 0 },
+      recasts: { count: 0 },
+      viewerContext: {},
+    };
+  }
+  const stats = await getReactionEngagement(
+    hubUrl,
+    params.fid,
+    params.hash,
+    protocolSession()?.fid,
+  );
+  return {
+    reactions: { count: stats.likeCount },
+    recasts: { count: stats.recastCount },
+    viewerContext: {
+      reacted: stats.viewerLiked,
+      recast: stats.viewerRecast,
+    },
+  };
+}
+
+export async function protocolCastReplies(params: {
+  parentHash: string;
+  cursor?: string;
+  excludeHashes?: string[];
+}): Promise<{ casts: ApiCast[]; next?: string }> {
+  const hubUrl = protocolHubUrl();
+  const fid = lookupFidForHash(params.parentHash);
+  if (!hubUrl || !fid) {
+    return { casts: [] };
+  }
+  const excluded = new Set(
+    (params.excludeHashes ?? []).map((hash) => hash.toLowerCase()),
+  );
+  let cursor = params.cursor;
+  let casts: HubCast[] = [];
+  let next: string | undefined;
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    const page = await getReplyPage(hubUrl, fid, params.parentHash, cursor);
+    next = page.nextPageToken;
+    casts = page.casts.filter((cast) => !excluded.has(cast.hash.toLowerCase()));
+    if (casts.length > 0 || !next) {
+      break;
+    }
+    cursor = next;
+  }
+  const authors = await authorsForFids(
+    hubUrl,
+    casts.map((cast) => cast.fid),
+  );
+  return {
+    casts: casts.map((cast) => {
+      const apiCast = hubCastToApiCast(
+        cast,
+        authors.get(cast.fid) ?? fallbackUser(cast.fid),
+      );
+      const parent = authors.get(fid);
+      if (parent) {
+        apiCast.parentAuthor = parent;
+      }
+      return apiCast;
+    }),
+    next,
   };
 }
 
