@@ -21,13 +21,11 @@ const LoginModal: FC<LoginModalProps> = memo(({ onClose }) => {
               e.stopPropagation();
             }}
           >
-            {protocolDirectEnabled && (
-              <>
-                <LoginWithWallet onClose={onClose} />
-                <div className="my-4 h-px w-full bg-white/15" />
-              </>
+            {protocolDirectEnabled ? (
+              <LoginWithWallet onClose={onClose} />
+            ) : (
+              <LoginWithMobile onClose={onClose} />
             )}
-            <LoginWithMobile onClose={onClose} />
           </div>
         </div>
       </DefaultModalContainer>

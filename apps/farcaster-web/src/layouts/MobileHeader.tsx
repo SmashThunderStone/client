@@ -23,6 +23,7 @@ import { ComposeCastButton } from '~/components/forms/buttons/ComposeCastButton'
 import { ExternalLink } from '~/components/links/ExternalLink';
 import { NavLinkBadge } from '~/components/links/NavLinkBadge';
 import { Search } from '~/components/search/Search';
+import { protocolDirectEnabled } from '~/constants/protocol';
 import { routes } from '~/constants/routes';
 import { useAnalytics } from '~/contexts/AnalyticsProvider';
 import { useCastComposerSession } from '~/contexts/CastComposerSessionProvider';
@@ -287,21 +288,25 @@ const MobileNavDropdown: FC<MobileNavDropdownProps> = memo(
               isActive={active.notifications}
               onClose={onClose}
             />
-            <DropdownItem
-              href={hrefs.directCasts}
-              label="Direct Casts"
-              icon={<Send size={16} />}
-              badge={inboxCount}
-              isActive={active.directCasts}
-              onClose={onClose}
-            />
-            <DropdownItem
-              href={hrefs.referrals}
-              label="Referrals"
-              icon={<UserPlusIcon size={16} />}
-              isActive={active.referrals}
-              onClose={onClose}
-            />
+            {!protocolDirectEnabled && (
+              <>
+                <DropdownItem
+                  href={hrefs.directCasts}
+                  label="Direct Casts"
+                  icon={<Send size={16} />}
+                  badge={inboxCount}
+                  isActive={active.directCasts}
+                  onClose={onClose}
+                />
+                <DropdownItem
+                  href={hrefs.referrals}
+                  label="Referrals"
+                  icon={<UserPlusIcon size={16} />}
+                  isActive={active.referrals}
+                  onClose={onClose}
+                />
+              </>
+            )}
             <DropdownItem
               href={hrefs.saved}
               label="Saved"
@@ -309,13 +314,15 @@ const MobileNavDropdown: FC<MobileNavDropdownProps> = memo(
               isActive={active.saved}
               onClose={onClose}
             />
-            <DropdownItem
-              href={hrefs.apps}
-              label="Apps"
-              icon={<Grid3X3Icon size={16} />}
-              isActive={active.apps}
-              onClose={onClose}
-            />
+            {!protocolDirectEnabled && (
+              <DropdownItem
+                href={hrefs.apps}
+                label="Apps"
+                icon={<Grid3X3Icon size={16} />}
+                isActive={active.apps}
+                onClose={onClose}
+              />
+            )}
             <DropdownItem
               href={hrefs.settings}
               label="Settings"

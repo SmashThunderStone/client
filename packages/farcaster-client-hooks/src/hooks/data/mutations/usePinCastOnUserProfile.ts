@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ApiCast } from 'farcaster-client-data';
 import { useCallback } from 'react';
 
+import { refuseHostedOnlyWrite } from '../../../protocol/writes';
 import { useFarcasterApiClient } from '../../../providers/FarcasterApiClientProvider';
 import { UserCastsCache } from '../../../types';
 import { useOptimisticallyUpdateCast } from '../optimistic/useOptimisticallyUpdateCast';
@@ -15,6 +16,7 @@ const usePinCastOnUserProfile = () => {
 
   return useCallback(
     async ({ cast }: { cast: ApiCast }) => {
+      refuseHostedOnlyWrite();
       qc.setQueryData<UserCastsCache>(
         buildUserCastsKey({ fid: cast.author.fid }),
         (data) => {

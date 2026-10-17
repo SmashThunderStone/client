@@ -3,7 +3,11 @@ import { useCallback } from 'react';
 
 import { RecastError } from '../../../errors';
 import { protocolReact, protocolRecastResponse } from '../../../protocol/api';
-import { protocolSession } from '../../../protocol/runtime';
+import {
+  isProtocolSignInRequired,
+  isProtocolUnavailable,
+  takeProtocolWrite,
+} from '../../../protocol/writes';
 import { useFarcasterApiClient } from '../../../providers/FarcasterApiClientProvider';
 import { useOptimisticallyUpdateCast } from '../optimistic';
 import { useInvalidateUserCasts } from '../queries/userCasts/useInvalidateUserCasts';
@@ -25,6 +29,7 @@ const useCreateRecast = () => {
       viewerUsername?: string;
       viewerDisplayName?: string;
     }) => {
+      const write = takeProtocolWrite();
       const revertOptimisticUpdates = optimisticallyUpdateCast({
         updates: {
           hash: cast.hash,
@@ -68,20 +73,21 @@ const useCreateRecast = () => {
       });
 
       try {
-        const response = protocolSession()
-          ? {
-              data: protocolRecastResponse(
-                await protocolReact({
-                  action: 'add',
-                  reaction: 'recast',
-                  targetFid: cast.author.fid,
-                  targetHash: cast.hash,
-                }),
-              ),
-            }
-          : await apiClient.createRecast({
-              castHash: cast.hash,
-            });
+        const response =
+          write.mode === 'hub'
+            ? {
+                data: protocolRecastResponse(
+                  await protocolReact({
+                    action: 'add',
+                    reaction: 'recast',
+                    targetFid: cast.author.fid,
+                    targetHash: cast.hash,
+                  }),
+                ),
+              }
+            : await apiClient.createRecast({
+                castHash: cast.hash,
+              });
 
         invalidateUserCasts({ fid: cast.author.fid });
 
@@ -96,6 +102,9 @@ const useCreateRecast = () => {
         } catch {}
       } catch (error) {
         revertOptimisticUpdates();
+        if (isProtocolSignInRequired(error) || isProtocolUnavailable(error)) {
+          throw error;
+        }
 
         throw new RecastError({
           error,

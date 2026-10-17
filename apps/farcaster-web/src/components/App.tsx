@@ -11,6 +11,7 @@ import React, { FC, ReactNode, Suspense } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { WagmiProvider } from 'wagmi';
 
+import { ProtocolDirectSessionGate } from '~/components/protocol/ProtocolDirectSessionGate';
 import { Router } from '~/components/routing/Router';
 import { protocolDirectEnabled } from '~/constants/protocol';
 import { AnalyticsProvider } from '~/contexts/AnalyticsProvider';
@@ -120,6 +121,7 @@ const App: FC = () => {
                                                       <MiniAppProvider>
                                                         <MinimizableWindowProvider>
                                                           <BrowserRouter>
+                                                            <ProtocolDirectSessionGate />
                                                             <Router />
                                                           </BrowserRouter>
                                                         </MinimizableWindowProvider>

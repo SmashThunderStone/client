@@ -20,6 +20,7 @@ import { NavLinkBadge } from '~/components/links/NavLinkBadge';
 import { NavLinkIcon } from '~/components/links/NavLinkIcon';
 import { NavLinkLabel } from '~/components/links/NavLinkLabel';
 import { ChannelNavLinks } from '~/components/sidebar/ChannelNavLinks';
+import { protocolDirectEnabled } from '~/constants/protocol';
 import { useUserAppContext } from '~/contexts/UserAppContextProvider';
 import { useCurrentUser } from '~/hooks/data/useCurrentUser';
 import { useCurrentUserProfileCastsLinkProps } from '~/hooks/navigation/useCurrentUserProfileCastsLinkProps';
@@ -70,55 +71,62 @@ const AuthedLeftSideBar: React.FC = React.memo(() => {
           <NavLinkLabel>Notifications</NavLinkLabel>
           <NavLinkBadge count={notificationsCount} subtle={false} />
         </NavLink>
-        <NavLink
-          to="spacesDiscovery"
-          params={{}}
-          searchParams={{}}
-          title="Spaces"
-        >
-          <NavLinkIcon>
-            <div className="relative translate-y-[-1.25px]">
-              <Mic size={20} />
-            </div>
-          </NavLinkIcon>
-          <NavLinkLabel>Spaces</NavLinkLabel>
-        </NavLink>
-        <NavLink to="discover" params={{}} searchParams={{}} title="Apps">
-          <NavLinkIcon>
-            <div className="relative translate-y-[-1.25px]">
-              <Grid3X3Icon size={20} />
-            </div>
-          </NavLinkIcon>
-          <NavLinkLabel>Apps</NavLinkLabel>
-          {/* <NavLinkBadge count={notificationsCount} subtle={false} /> */}
-        </NavLink>
-        <NavLink
-          to="directCastsInbox"
-          params={{}}
-          searchParams={{}}
-          title="Inbox"
-        >
-          <NavLinkIcon>
-            <div className="translate-y-[-0.5px]">
-              <Send size={20} />
-            </div>
-          </NavLinkIcon>
-          <NavLinkLabel>Direct Casts</NavLinkLabel>
-          <NavLinkBadge className="ml-4" count={inboxCount} subtle={false} />
-        </NavLink>
-        <NavLink
-          to={'referrals'}
-          params={{}}
-          searchParams={{}}
-          title="Referrals"
-        >
-          <NavLinkIcon>
-            <div className="relative translate-y-[-0.75px]">
-              <UserPlusIcon size={20} />
-            </div>
-          </NavLinkIcon>
-          <NavLinkLabel>Referrals</NavLinkLabel>
-        </NavLink>
+        {!protocolDirectEnabled && (
+          <>
+            <NavLink
+              to="spacesDiscovery"
+              params={{}}
+              searchParams={{}}
+              title="Spaces"
+            >
+              <NavLinkIcon>
+                <div className="relative translate-y-[-1.25px]">
+                  <Mic size={20} />
+                </div>
+              </NavLinkIcon>
+              <NavLinkLabel>Spaces</NavLinkLabel>
+            </NavLink>
+            <NavLink to="discover" params={{}} searchParams={{}} title="Apps">
+              <NavLinkIcon>
+                <div className="relative translate-y-[-1.25px]">
+                  <Grid3X3Icon size={20} />
+                </div>
+              </NavLinkIcon>
+              <NavLinkLabel>Apps</NavLinkLabel>
+            </NavLink>
+            <NavLink
+              to="directCastsInbox"
+              params={{}}
+              searchParams={{}}
+              title="Inbox"
+            >
+              <NavLinkIcon>
+                <div className="translate-y-[-0.5px]">
+                  <Send size={20} />
+                </div>
+              </NavLinkIcon>
+              <NavLinkLabel>Direct Casts</NavLinkLabel>
+              <NavLinkBadge
+                className="ml-4"
+                count={inboxCount}
+                subtle={false}
+              />
+            </NavLink>
+            <NavLink
+              to={'referrals'}
+              params={{}}
+              searchParams={{}}
+              title="Referrals"
+            >
+              <NavLinkIcon>
+                <div className="relative translate-y-[-0.75px]">
+                  <UserPlusIcon size={20} />
+                </div>
+              </NavLinkIcon>
+              <NavLinkLabel>Referrals</NavLinkLabel>
+            </NavLink>
+          </>
+        )}
         <NavLink to={'saved'} params={{}} searchParams={{}} title="Saved">
           <NavLinkIcon>
             <div className="relative translate-y-[-0.75px]">

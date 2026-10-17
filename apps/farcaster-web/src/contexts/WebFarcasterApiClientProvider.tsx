@@ -22,6 +22,7 @@ import {
   getProtocolSession,
   subscribeProtocolSession,
 } from '~/protocol/bridge';
+import { openProtocolSignIn } from '~/protocol/signInPrompt';
 import { Analytics } from '~/utils/analyticsUtils';
 import { getPersistedDeviceId } from '~/utils/deviceIdUtils';
 
@@ -50,6 +51,7 @@ const WebFarcasterApiClientProvider: FC<WebFarcasterApiClientProviderProps> =
               enabled: true,
               hubUrl: snapHubUrl,
               getSession: () => session,
+              requestSignIn: openProtocolSignIn,
             }
           : undefined,
       [session],

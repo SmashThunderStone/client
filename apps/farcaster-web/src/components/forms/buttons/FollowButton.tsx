@@ -19,7 +19,7 @@ import { useUserAppContext } from '~/contexts/UserAppContextProvider';
 import { useCurrentUser } from '~/hooks/data/useCurrentUser';
 import { useIsSignedIn } from '~/hooks/data/useIsSignedIn';
 import { useNavigateToProfile } from '~/hooks/navigation/useNavigateToProfile';
-import { trackError } from '~/utils/errorUtils';
+import { reportCastActionError } from '~/utils/protocolWriteError';
 
 type FollowButtonProps = {
   className?: string;
@@ -146,8 +146,7 @@ const AuthenticatedFollowButtonContent: FC<FollowButtonProps> = memo(
               }
             } catch (error) {
               // TODO: Add proper UI for error
-              trackError(error);
-              alert(error);
+              reportCastActionError(error);
             }
           }}
         >

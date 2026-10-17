@@ -2,7 +2,7 @@ import { ApiOpenGraphMetadata } from 'farcaster-client-data';
 import { useCallback } from 'react';
 
 import { protocolCreateCast } from '../../../protocol/api';
-import { protocolSession } from '../../../protocol/runtime';
+import { takeProtocolWrite } from '../../../protocol/writes';
 import { useFarcasterApiClient } from '../../../providers/FarcasterApiClientProvider';
 import { sleep } from '../../../utils/PromiseUtils';
 import { useInvalidateActiveChannelStreak } from '../queries/activeChannelStreak/useInvalidateActiveChannelStreak';
@@ -48,7 +48,8 @@ const useCreateCast = () => {
       clientProcessedOpenGraphMetadata?: ApiOpenGraphMetadata[];
       skipFeedRegenrationDelay?: boolean;
     }) => {
-      if (protocolSession()) {
+      const write = takeProtocolWrite();
+      if (write.mode === 'hub') {
         const data = await protocolCreateCast({
           text: castText,
           embeds,

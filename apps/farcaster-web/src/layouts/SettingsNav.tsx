@@ -6,6 +6,7 @@ import { SettingsNavLink } from '~/components/links/SettingsNavLink';
 import { SettingsNavLinkLabel } from '~/components/links/SettingsNavLinkLabel';
 import { LogoutModal } from '~/components/modals/LogoutModal';
 import { ThemeSettings } from '~/components/settings/ThemeSettings';
+import { protocolDirectEnabled } from '~/constants/protocol';
 import { appSettingsPathPrefix } from '~/constants/routePrefixes';
 
 const SettingsNav: FC = memo(() => {
@@ -51,14 +52,16 @@ const SettingsNav: FC = memo(() => {
       >
         <SettingsNavLinkLabel>Preferred wallet</SettingsNavLinkLabel>
       </SettingsNavLink>
-      <SettingsNavLink
-        to="settingsDirectCasts"
-        params={{}}
-        searchParams={{}}
-        title="Direct Casts"
-      >
-        <SettingsNavLinkLabel>Direct Casts</SettingsNavLinkLabel>
-      </SettingsNavLink>
+      {!protocolDirectEnabled && (
+        <SettingsNavLink
+          to="settingsDirectCasts"
+          params={{}}
+          searchParams={{}}
+          title="Direct Casts"
+        >
+          <SettingsNavLinkLabel>Direct Casts</SettingsNavLinkLabel>
+        </SettingsNavLink>
+      )}
       <SettingsNavLink
         to="settingsStorage"
         params={{}}
@@ -68,14 +71,16 @@ const SettingsNav: FC = memo(() => {
         <SettingsNavLinkLabel>Storage</SettingsNavLinkLabel>
       </SettingsNavLink>
       {/* Actions removed */}
-      <SettingsNavLink
-        to="settingsFrames"
-        params={{}}
-        searchParams={{}}
-        title="Mini Apps"
-      >
-        <SettingsNavLinkLabel>Mini Apps</SettingsNavLinkLabel>
-      </SettingsNavLink>
+      {!protocolDirectEnabled && (
+        <SettingsNavLink
+          to="settingsFrames"
+          params={{}}
+          searchParams={{}}
+          title="Mini Apps"
+        >
+          <SettingsNavLinkLabel>Mini Apps</SettingsNavLinkLabel>
+        </SettingsNavLink>
+      )}
       <SettingsNavLink
         to="settingsFeeds"
         params={{}}

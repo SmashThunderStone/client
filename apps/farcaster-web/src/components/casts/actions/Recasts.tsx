@@ -6,8 +6,10 @@ import { CastReactionAction } from '~/components/casts/actions/CastReactionActio
 import { CastActionProps } from '~/components/casts/actions/types';
 import { AlertModal } from '~/components/modals/AlertModal';
 import { RecastOptions } from '~/components/popovers/RecastOptions';
+import { protocolDirectEnabled } from '~/constants/protocol';
 import { useCachedCurrentUser } from '~/hooks/data/useCachedCurrentUser';
 import { useIsSignedIn } from '~/hooks/data/useIsSignedIn';
+import { openProtocolSignIn } from '~/protocol/signInPrompt';
 
 type RecastIconProps = { active: boolean };
 
@@ -74,7 +76,13 @@ const RecastsContent: FC<RecastsContentProps> = memo(
           isActive={cast.viewerContext?.recast}
           isFocused={!!isFocused}
           variant="green"
-          disabled={!currentUser || disabled}
+          label="Recast"
+          disabled={(!currentUser && !protocolDirectEnabled) || disabled}
+          onClick={
+            !currentUser && protocolDirectEnabled
+              ? () => openProtocolSignIn()
+              : undefined
+          }
         />
       );
     }, [
@@ -94,7 +102,8 @@ const RecastsContent: FC<RecastsContentProps> = memo(
             isActive={cast.viewerContext?.recast}
             isFocused={!!isFocused}
             variant="green"
-            disabled={!currentUser || disabled}
+            label="Recast"
+            disabled={(!currentUser && !protocolDirectEnabled) || disabled}
             onClick={() => setShowBlockedAlert(true)}
           />
           {showBlockedAlert && (

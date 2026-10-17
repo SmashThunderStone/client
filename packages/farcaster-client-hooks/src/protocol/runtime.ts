@@ -11,6 +11,7 @@ export type ProtocolSession = {
 type ProtocolRuntime = {
   hubUrl: string;
   getSession: () => ProtocolSession | null;
+  requestSignIn?: () => void;
 };
 
 let runtime: ProtocolRuntime | null = null;
@@ -27,11 +28,16 @@ export function protocolSession(): ProtocolSession | null {
   return runtime?.getSession() ?? null;
 }
 
-/** Wallet session is active and the hosted API has no auth token. */
-export function protocolReplacesHostedAuth(apiClient: {
+/**
+ * A local signer replaces hosted reads. A leftover hosted auth token does
+ * not keep those reads on the hosted client.
+ */
+export function protocolReplacesHostedAuth(_apiClient: {
   options: { authToken?: unknown };
 }): boolean {
-  return Boolean(
-    protocolHubUrl() && protocolSession() && !apiClient.options.authToken,
-  );
+  return Boolean(protocolHubUrl() && protocolSession());
+}
+
+export function requestProtocolSignIn(): void {
+  runtime?.requestSignIn?.();
 }

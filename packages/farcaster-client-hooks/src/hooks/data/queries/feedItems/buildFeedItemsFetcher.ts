@@ -48,7 +48,7 @@ export const buildFeedItemsFetcher =
     seedCastHash?: string;
   }) =>
   async ({ pageParam }: { pageParam?: FeedItemsPageParam }) => {
-    if (protocolHubUrl() && !apiClient.options.authToken) {
+    if (protocolHubUrl()) {
       const session = protocolSession();
       if (session && (feedKey === 'home' || feedKey === 'following')) {
         const page = await protocolHomeFeed({

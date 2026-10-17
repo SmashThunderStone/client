@@ -87,6 +87,7 @@ export type FarcasterApiClientProviderProps = {
     enabled: boolean;
     hubUrl: string;
     getSession: () => ProtocolSession | null;
+    requestSignIn?: () => void;
   };
 };
 
@@ -113,9 +114,14 @@ const FarcasterApiClientProvider = memo(
   }: FarcasterApiClientProviderProps) => {
     setProtocolRuntime(
       protocol?.enabled
-        ? { hubUrl: protocol.hubUrl, getSession: protocol.getSession }
+        ? {
+            hubUrl: protocol.hubUrl,
+            getSession: protocol.getSession,
+            requestSignIn: protocol.requestSignIn,
+          }
         : null,
     );
+    const protocolEnabled = protocol?.enabled === true;
     const options = useMemo(() => {
       const next: Partial<FarcasterApiClientOptions> = {
         baseUrl,
@@ -136,6 +142,7 @@ const FarcasterApiClientProvider = memo(
         getSessionId,
         timeoutRetryDecayFactor,
         isOffline,
+        blockHostedWrites: protocolEnabled ? true : undefined,
       };
       return compactApiClientOptions(next);
     }, [
@@ -154,6 +161,7 @@ const FarcasterApiClientProvider = memo(
       getSessionId,
       timeoutRetryDecayFactor,
       isOffline,
+      protocolEnabled,
     ]);
 
     useEffect(() => {

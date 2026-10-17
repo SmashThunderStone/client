@@ -9,13 +9,22 @@ export type CastReactionActionProps = {
   icon: React.ReactNode;
   isActive?: boolean;
   isFocused: boolean;
+  label?: string;
   onClick?: (e: React.SyntheticEvent) => void;
   variant?: 'green' | 'red' | 'purple' | 'blue' | undefined;
 };
 
 function CastReactionAction(props: CastReactionActionProps) {
-  const { onClick, icon, isActive, isFocused, count, variant, disabled } =
-    props;
+  const {
+    onClick,
+    icon,
+    isActive,
+    isFocused,
+    count,
+    variant,
+    disabled,
+    label,
+  } = props;
   const activeStyle =
     isActive && !disabled && props.activeColor
       ? { color: props.activeColor }
@@ -23,6 +32,7 @@ function CastReactionAction(props: CastReactionActionProps) {
 
   return (
     <div
+      aria-label={label}
       className={cn(
         'group flex w-max flex-row items-center text-sm text-tertiary',
         !disabled && 'cursor-pointer',

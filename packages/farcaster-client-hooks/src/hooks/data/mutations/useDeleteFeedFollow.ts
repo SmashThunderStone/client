@@ -2,6 +2,7 @@ import { AnalyticsEvent } from 'farcaster-analytics';
 import { useCallback } from 'react';
 
 import { DeleteFeedFollowError } from '../../../errors';
+import { refuseHostedOnlyWrite } from '../../../protocol/writes';
 import { useTrackEvent } from '../../../providers/EventingProvider';
 import { useFarcasterApiClient } from '../../../providers/FarcasterApiClientProvider';
 import { useOptimisticallyUpdateChannel } from '../optimistic/useOptimisticallyUpdateChannel';
@@ -40,6 +41,7 @@ const useDeleteFeedFollow = () => {
       // used for analytics
       location?: string;
     }) => {
+      refuseHostedOnlyWrite();
       const revertOptimisticUpdates = optimisticallyUpdateFeed({
         updates: {
           key: feedKey,
