@@ -1,6 +1,7 @@
-// .mts so Vercel emits api/media.mjs. The repo root package is CommonJS, and a
-// .js function with `import` crashes at load. The `.js` specifier is the Node
-// ESM path for mediaAuth.ts, which emits as CommonJS under farcaster-protocol.
+// Source for api/media.js. scripts/bundle-media-function.mjs bundles this file,
+// mediaAuth, and @vercel/blob into one CommonJS function. Vercel does not keep
+// pnpm's node_modules symlinks, so a bare require("@vercel/blob/client") does
+// not resolve in the built function.
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
 import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
@@ -8,7 +9,7 @@ import {
   authorizeMediaUpload,
   MEDIA_UPLOAD_MAX_BYTES,
   verifyMediaUploadProof,
-} from '../packages/farcaster-protocol/src/mediaAuth.js';
+} from '../../packages/farcaster-protocol/src/mediaAuth';
 
 export const runtime = 'nodejs';
 
@@ -76,11 +77,14 @@ async function signersForFid(fid: number): Promise<{ key: string }[]> {
   if (cached && Date.now() - cached.at < SIGNER_CACHE_MS) {
     return cached.signers;
   }
-  const response = await fetch(`${HUB_URL}/v1/signersByFid?fid=${fid}`);
+  const response = (await fetch(`${HUB_URL}/v1/signersByFid?fid=${fid}`)) as {
+    ok: boolean;
+    json(): Promise<{ signers?: { key?: string }[] }>;
+  };
   if (!response.ok) {
     throw new Error('Could not check this FID on the hub');
   }
-  const json = (await response.json()) as { signers?: { key?: string }[] };
+  const json = await response.json();
   const signers = (json.signers ?? [])
     .map((signer) => signer.key)
     .filter((key): key is string => typeof key === 'string')
