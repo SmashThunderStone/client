@@ -112,7 +112,7 @@ With that flag on and no hosted auth token, profile, casts, follows, notificatio
 
 Hub embeds are only a URL or a quoted cast id. Direct mode shows `imagedelivery.net`, `i.imgur.com`, `wrpcd.net`, `*.public.blob.vercel-storage.com`, and `.png`/`.jpg`/`.jpeg`/`.gif`/`.webp` links as images, `stream.farcaster.xyz` and `.m3u8`/`.mp4`/`.webm` links in the existing video player, quoted casts from the hub, and every other URL as a link card.
 
-Direct-mode image upload uses Vercel Blob. The browser asks `POST /api/media` for a client token, then uploads the file straight to Blob. The function checks an Ed25519 signature from the local signer (timestamp, pathname, and file hash, rejected after 5 minutes) and requires that public key in haatz `signersByFid`. Images are JPEG, PNG, GIF, or WebP, at most 10 MB, stored at `casts/<fid>/<random>.<ext>`. The cast keeps at most 2 embeds. With the flag off, the composer still uses `POST /v1/generate-image-upload-url` on the hosted API.
+Direct-mode image upload uses Vercel Blob. The browser asks `POST /api/media` for a client token, then uploads the file straight to Blob. The function is `api/media.mts` (Node ESM). `api/package.json` sets `"type": "module"` for that directory only, so the root package and the Vite and Tailwind configs stay CommonJS. The function checks an Ed25519 signature from the local signer (timestamp, pathname, and file hash, rejected after 5 minutes) and requires that public key in haatz `signersByFid`. Images are JPEG, PNG, GIF, or WebP, at most 10 MB, stored at `casts/<fid>/<random>.<ext>`. The cast keeps at most 2 embeds. With the flag off, the composer still uses `POST /v1/generate-image-upload-url` on the hosted API.
 
 | Variable | Where | Required |
 | --- | --- | --- |

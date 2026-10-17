@@ -1,3 +1,6 @@
+// .mts so Vercel emits api/media.mjs. The repo root package is CommonJS, and a
+// .js function with `import` crashes at load. The `.js` specifier is the Node
+// ESM path for mediaAuth.ts, which emits as CommonJS under farcaster-protocol.
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
 import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
@@ -5,7 +8,7 @@ import {
   authorizeMediaUpload,
   MEDIA_UPLOAD_MAX_BYTES,
   verifyMediaUploadProof,
-} from '../packages/farcaster-protocol/src/mediaAuth';
+} from '../packages/farcaster-protocol/src/mediaAuth.js';
 
 export const runtime = 'nodejs';
 

@@ -19,7 +19,7 @@
     }
   ],
   "functions": {
-    "api/media.ts": {
+    "api/media.mts": {
       "maxDuration": 10
     }
   }

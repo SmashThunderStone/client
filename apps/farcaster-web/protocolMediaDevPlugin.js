@@ -11,7 +11,7 @@ const mediaAuthModule = path.resolve(
  * Local stand-in for the Vercel `/api/media` function. It checks the same
  * Ed25519 proof as production, then returns a fake public URL instead of
  * calling Vercel Blob. The hub signer lookup is skipped because this VM does
- * not have Smash's registered key. Production `api/media.ts` does that lookup.
+ * not have Smash's registered key. Production `api/media.mts` does that lookup.
  */
 export function protocolMediaDevPlugin() {
   return {
