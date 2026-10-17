@@ -14,8 +14,13 @@
       "destination": "https://haatz.quilibrium.com/:path*"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!api(?:/|$))(?!fc-api(?:/|$))(?!snap(?:/|$)).*)",
       "destination": "/index.html"
     }
-  ]
+  ],
+  "functions": {
+    "api/media.ts": {
+      "maxDuration": 10
+    }
+  }
 }

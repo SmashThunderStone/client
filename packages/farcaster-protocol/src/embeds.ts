@@ -16,7 +16,12 @@ export type HubEmbed = {
 
 export type EmbedKind = 'image' | 'video' | 'link';
 
-const IMAGE_HOSTS = new Set(['imagedelivery.net', 'i.imgur.com', 'wrpcd.net']);
+const IMAGE_HOSTS = new Set([
+  'imagedelivery.net',
+  'i.imgur.com',
+  'wrpcd.net',
+  'public.blob.vercel-storage.com',
+]);
 
 const VIDEO_HOSTS = new Set(['stream.farcaster.xyz']);
 

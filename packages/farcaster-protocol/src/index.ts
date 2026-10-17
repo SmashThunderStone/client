@@ -18,6 +18,17 @@ export {
   submitAndReadBack,
   waitForSigner,
 } from './hub';
+export type { MediaContentType, MediaUploadProof } from './mediaAuth';
+export {
+  authorizeMediaUpload,
+  canonicalMediaUploadMessage,
+  MEDIA_UPLOAD_MAX_AGE_MS,
+  MEDIA_UPLOAD_MAX_BYTES,
+  MediaUploadError,
+  randomCastImagePath,
+  signMediaUpload,
+  verifyMediaUploadProof,
+} from './mediaAuth';
 export type { CastDraft, ProtocolSigner } from './messages';
 export {
   buildCastAdd,

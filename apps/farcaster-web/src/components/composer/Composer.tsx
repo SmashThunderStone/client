@@ -53,8 +53,10 @@ import {
   useComposer,
 } from '~/contexts/ComposerParentCastProvider';
 import { useUserAppContext } from '~/contexts/UserAppContextProvider';
+import { bindCastImageFile } from '~/hooks/data/castImageUploadProgress';
 import { useCurrentUser } from '~/hooks/data/useCurrentUser';
 import { useOptimisticUploadCloudflareImage } from '~/hooks/data/useOptimisticUploadCloudflareImage';
+import { useProtocolCastImageUpload } from '~/hooks/data/useProtocolCastImageUpload';
 import { useNavigateToConversation } from '~/hooks/navigation/useNavigateToConversation';
 import { CastComposerIntent } from '~/types';
 import { trackError } from '~/utils/errorUtils';
@@ -265,6 +267,10 @@ const ComposerInner = React.forwardRef<
     const navigateToConversation = useNavigateToConversation();
     const uploadOptimisticCloudflareImage =
       useOptimisticUploadCloudflareImage();
+    const uploadProtocolCastImage = useProtocolCastImageUpload();
+    const uploadCastImage = protocolDirectEnabled
+      ? uploadProtocolCastImage
+      : uploadOptimisticCloudflareImage;
 
     // Separate out the parent cast hash immediately when we need the intent so its not getting messed up back and forth with
     // random changes component lifecycle.
@@ -494,7 +500,7 @@ const ComposerInner = React.forwardRef<
     const castComposerEmbedsReturn = useCastComposerEmbeds({
       castLocalKeys: queuedCastLocalKeys,
       maxEmbedsLength: castEmbedLimit,
-      uploadCloudflareImage: uploadOptimisticCloudflareImage,
+      uploadCloudflareImage: uploadCastImage,
       trackError,
       resolveUrlEmbedsOnFailure,
       onImageUploadFailure: handleImageUploadFailure,
@@ -527,9 +533,18 @@ const ComposerInner = React.forwardRef<
 
     const addMediaEmbed = useCallback(
       async ({ file }: { file: File }) => {
-        const finalImageUploaderPromise = fetchImageUploadUrl();
-
         const fileType = getEmbedType(file.name);
+        if (protocolDirectEnabled && fileType === 'video') {
+          toast({
+            message: 'Video upload is not available in SmashCast direct mode.',
+            type: 'error',
+            toastId: 'protocol-video-upload',
+          });
+          return;
+        }
+        const finalImageUploaderPromise = protocolDirectEnabled
+          ? undefined
+          : fetchImageUploadUrl();
 
         if (fileType === 'video') {
           // Use a <video> element to check the duration of the video
@@ -572,6 +587,9 @@ const ComposerInner = React.forwardRef<
           });
         } else {
           const image = await probeImage(file);
+          if (protocolDirectEnabled) {
+            bindCastImageFile(file, image.src);
+          }
 
           dispatch({
             type: 'AddImage',
@@ -1964,26 +1982,19 @@ const ComposerInner = React.forwardRef<
                     </React.Suspense>
                   </span>
                 )}
-                {protocolDirectEnabled ? (
-                  <span className="max-w-[220px] px-1 text-xs leading-4 text-muted">
-                    Image upload needs the hosted Farcaster API. Paste an image
-                    link instead.
-                  </span>
-                ) : (
-                  <MediaComposerPicker
-                    className="bg-action-muted! !rounded-md !px-2 hover:!bg-tertiary"
-                    disabled={
-                      !!uploadingStatuses[focusedCastLocalKey] ||
-                      (getRemainingEmbedsCount(focusedCastLocalKey) > 0 &&
-                        !getCanAddMoreEmbeds(focusedCastLocalKey))
-                    }
-                    getRemainingEmbedsCount={() =>
-                      getRemainingEmbedsCount(focusedCastLocalKey)
-                    }
-                    castEmbedLimit={castEmbedLimit}
-                    onMediaUpload={addMediaEmbed}
-                  />
-                )}
+                <MediaComposerPicker
+                  className="bg-action-muted! !rounded-md !px-2 hover:!bg-tertiary"
+                  disabled={
+                    !!uploadingStatuses[focusedCastLocalKey] ||
+                    (getRemainingEmbedsCount(focusedCastLocalKey) > 0 &&
+                      !getCanAddMoreEmbeds(focusedCastLocalKey))
+                  }
+                  getRemainingEmbedsCount={() =>
+                    getRemainingEmbedsCount(focusedCastLocalKey)
+                  }
+                  castEmbedLimit={castEmbedLimit}
+                  onMediaUpload={addMediaEmbed}
+                />
                 <EmojiComposerPicker
                   className="!px-2 bg-action-muted hover:!bg-tertiary"
                   iconClassName="text-muted"

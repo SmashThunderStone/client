@@ -27,6 +27,16 @@ describe('classifyEmbedUrl', () => {
     expect(classifyEmbedUrl('https://cdn.example.com/a/b.jpeg')).toBe('image');
     expect(classifyEmbedUrl('https://cdn.example.com/a/b.gif')).toBe('image');
     expect(classifyEmbedUrl('https://cdn.example.com/a/b.webp')).toBe('image');
+    expect(
+      classifyEmbedUrl(
+        'https://lq83u54ynw1qpvj9.public.blob.vercel-storage.com/casts/218142/ab',
+      ),
+    ).toBe('image');
+    expect(
+      classifyEmbedUrl(
+        'https://public.blob.vercel-storage.com.evil.example/casts/1/ab',
+      ),
+    ).toBe('link');
   });
 
   it('treats stream.farcaster.xyz and video extensions as video', () => {

@@ -110,7 +110,14 @@ Off unless `VITE_PROTOCOL_DIRECT=1`. Details and the gasless vs onchain signer c
 
 With that flag on and no hosted auth token, profile, casts, follows, notifications, and the home feed are read from the hub. Notifications are the latest likes, recasts, and replies on your newest casts, plus mentions and new followers. A local last-seen time highlights rows that arrived after the previous visit. The nav badge stays at zero so that poll does not fan out to the hub. Home is a chronological merge of your casts and a capped page of accounts you follow. Preferences and app context use local defaults. Other hosted screens say they are not available in SmashCast direct mode instead of failing the page. Placeholder PostHog (`REPLACE_ME`) is not initialized.
 
-Hub embeds are only a URL or a quoted cast id. Direct mode shows `imagedelivery.net`, `i.imgur.com`, `wrpcd.net`, and `.png`/`.jpg`/`.jpeg`/`.gif`/`.webp` links as images, `stream.farcaster.xyz` and `.m3u8`/`.mp4`/`.webm` links in the existing video player, quoted casts from the hub, and every other URL as a link card. The composer image button is hidden in this mode: upload URLs come from the hosted API (`POST /v1/generate-image-upload-url`). Paste an image link into the cast instead. A replacement uploader would need to accept the file without a Farcaster token and return a stable public HTTPS URL on one of those image hosts, or a URL ending in an image extension.
+Hub embeds are only a URL or a quoted cast id. Direct mode shows `imagedelivery.net`, `i.imgur.com`, `wrpcd.net`, `*.public.blob.vercel-storage.com`, and `.png`/`.jpg`/`.jpeg`/`.gif`/`.webp` links as images, `stream.farcaster.xyz` and `.m3u8`/`.mp4`/`.webm` links in the existing video player, quoted casts from the hub, and every other URL as a link card.
+
+Direct-mode image upload uses Vercel Blob. The browser asks `POST /api/media` for a client token, then uploads the file straight to Blob. The function checks an Ed25519 signature from the local signer (timestamp, pathname, and file hash, rejected after 5 minutes) and requires that public key in haatz `signersByFid`. Images are JPEG, PNG, GIF, or WebP, at most 10 MB, stored at `casts/<fid>/<random>.<ext>`. The cast keeps at most 2 embeds. With the flag off, the composer still uses `POST /v1/generate-image-upload-url` on the hosted API.
+
+| Variable | Where | Required |
+| --- | --- | --- |
+| `BLOB_READ_WRITE_TOKEN` | Vercel Production and Preview, on the server only. Connect the `smashcast-media` Blob store to this project so Vercel injects the token. Do not prefix it with `VITE_`. | Yes, for direct-mode uploads on Vercel. |
+| `SNAP_HUB_URL` | Same server environments. | No. Defaults to `https://haatz.quilibrium.com`. |
 
 Phone steps, once that flag and a WalletConnect project id are set on the Vercel build:
 

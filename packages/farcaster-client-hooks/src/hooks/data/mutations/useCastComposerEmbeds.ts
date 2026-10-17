@@ -89,7 +89,7 @@ export const MAX_VIDEO_LENGTH_MINUTES = 10;
 export const MAX_VIDEO_LENGTH_SECONDS = MAX_VIDEO_LENGTH_MINUTES * 60;
 
 // We should maybe add gif and jpeg
-const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif'];
+const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
 
 // Extensions used to detect image URLs typed in the composer for prioritization
 // From https://developers.cloudflare.com/stream/faq/
