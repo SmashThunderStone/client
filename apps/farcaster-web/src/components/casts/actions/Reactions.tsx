@@ -14,8 +14,9 @@ import {
 } from '~/components/casts/actions/CastReactionAction';
 import { ThemedReactionIcon } from '~/components/casts/actions/icons/ThemedReactionIcon';
 import { CastActionProps } from '~/components/casts/actions/types';
+import { protocolDirectEnabled } from '~/constants/protocol';
 import { useIsSignedIn } from '~/hooks/data/useIsSignedIn';
-import { trackError } from '~/utils/errorUtils';
+import { reportCastActionError } from '~/utils/protocolWriteError';
 
 type HeartIconProps = {
   active: boolean;
@@ -77,7 +78,8 @@ const Reactions: FC<ReactionsProps> = memo(
         isFocused={!!isFocused}
         isActive={!!cast.viewerContext?.reacted}
         variant={variant}
-        disabled={!isSignedIn || disabled}
+        label={active ? 'Unlike' : 'Like'}
+        disabled={(!isSignedIn && !protocolDirectEnabled) || disabled}
         onClick={async () => {
           if (isSubmitting) {
             return;
@@ -97,17 +99,13 @@ const Reactions: FC<ReactionsProps> = memo(
               try {
                 await deleteCastLike({ cast });
               } catch (error) {
-                // TODO: Add proper UI for error
-                trackError(error);
-                alert(error);
+                reportCastActionError(error);
               }
             } else {
               try {
                 await createCastLike({ cast });
               } catch (error) {
-                // TODO: Add proper UI for error
-                trackError(error);
-                alert(error);
+                reportCastActionError(error);
               }
             }
           } finally {

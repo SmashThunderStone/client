@@ -10,6 +10,7 @@ import { LiveNowSpaces } from '~/components/rightSidebar/LiveNowSpaces';
 import { MiniApps } from '~/components/rightSidebar/MiniApps';
 import { TrendingTopics } from '~/components/rightSidebar/TrendingTopics';
 import { Search } from '~/components/search/Search';
+import { protocolDirectEnabled } from '~/constants/protocol';
 import { useCurrentRoute } from '~/hooks/navigation/useCurrentRoute';
 import { RightSideBar } from '~/layouts/RightSideBar';
 import { SupportAndTermsLinks } from '~/layouts/SupportAndTermsLinks';
@@ -46,8 +47,12 @@ const AuthedRightSideBar: FC = memo(() => {
                 <ClankerSpotlight />
               </Suspense>
             )}
-            <MiniApps />
-            {routeName === 'homeFeed' && <LiveNowSpaces />}
+            {!protocolDirectEnabled && (
+              <>
+                <MiniApps />
+                {routeName === 'homeFeed' && <LiveNowSpaces />}
+              </>
+            )}
             <TrendingTopics />
             <SupportAndTermsLinks />
           </ProtocolQuietBoundary>

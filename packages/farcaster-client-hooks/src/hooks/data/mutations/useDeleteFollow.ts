@@ -4,7 +4,11 @@ import { useCallback } from 'react';
 
 import { DeleteFollowError } from '../../../errors';
 import { protocolFollow } from '../../../protocol/api';
-import { protocolSession } from '../../../protocol/runtime';
+import {
+  isProtocolSignInRequired,
+  isProtocolUnavailable,
+  takeProtocolWrite,
+} from '../../../protocol/writes';
 import { useFarcasterApiClient } from '../../../providers/FarcasterApiClientProvider';
 import { useOptimisticallyUpdateUser } from '../optimistic/useOptimisticallyUpdateUser';
 import { buildUserAppContextKey } from '../queries/userAppContext/buildUserAppContextKey';
@@ -22,6 +26,7 @@ const useDeleteFollow = () => {
       followee: ApiUser;
       follower: ApiUser;
     }) => {
+      const write = takeProtocolWrite();
       const revertFollowerUpdate = optimisticallyUpdateUser({
         updates: {
           fid: follower.fid,
@@ -51,19 +56,23 @@ const useDeleteFollow = () => {
       });
 
       try {
-        const data = protocolSession()
-          ? (await protocolFollow({
-              action: 'remove',
-              targetFid: followee.fid,
-            }),
-            {
-              result: { success: true, userAppContext: { canAddLinks: true } },
-            })
-          : (
-              await apiClient.deleteFollow({
+        const data =
+          write.mode === 'hub'
+            ? (await protocolFollow({
+                action: 'remove',
                 targetFid: followee.fid,
+              }),
+              {
+                result: {
+                  success: true,
+                  userAppContext: { canAddLinks: true },
+                },
               })
-            ).data;
+            : (
+                await apiClient.deleteFollow({
+                  targetFid: followee.fid,
+                })
+              ).data;
 
         const userAppContextKey = buildUserAppContextKey();
         queryClient.setQueryData(
@@ -79,6 +88,9 @@ const useDeleteFollow = () => {
       } catch (error) {
         revertFollowerUpdate();
         revertFolloweeUpdates();
+        if (isProtocolSignInRequired(error) || isProtocolUnavailable(error)) {
+          throw error;
+        }
 
         throw new DeleteFollowError({
           error,

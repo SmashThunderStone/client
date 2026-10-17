@@ -66,6 +66,11 @@ export interface FarcasterApiClientOptions {
    * Authed requests are rejected locally instead of calling the API.
    */
   readonly protocolDirectAnonymous?: boolean;
+  /**
+   * Protocol-direct mode. PUT, POST, PATCH, and DELETE never leave the
+   * browser for the hosted API.
+   */
+  readonly blockHostedWrites?: boolean;
 }
 
 export interface FarcasterApiClientMetaOptions {

@@ -3,7 +3,11 @@ import { useCallback } from 'react';
 
 import { UpdateCastLikeError } from '../../../errors';
 import { protocolReact, protocolRemoved } from '../../../protocol/api';
-import { protocolSession } from '../../../protocol/runtime';
+import {
+  isProtocolSignInRequired,
+  isProtocolUnavailable,
+  takeProtocolWrite,
+} from '../../../protocol/writes';
 import { useFarcasterApiClient } from '../../../providers/FarcasterApiClientProvider';
 import { useOptimisticallyUpdateCast } from '../optimistic/useOptimisticallyUpdateCast';
 
@@ -13,6 +17,7 @@ const useDeleteCastLike = () => {
 
   return useCallback(
     async ({ cast }: { cast: ApiCast }) => {
+      const write = takeProtocolWrite();
       const revertOptimisticUpdates = optimisticallyUpdateCast({
         updates: {
           hash: cast.hash,
@@ -35,7 +40,7 @@ const useDeleteCastLike = () => {
       });
 
       try {
-        if (protocolSession()) {
+        if (write.mode === 'hub') {
           await protocolReact({
             action: 'remove',
             reaction: 'like',
@@ -50,6 +55,9 @@ const useDeleteCastLike = () => {
         return response.data;
       } catch (error) {
         revertOptimisticUpdates();
+        if (isProtocolSignInRequired(error) || isProtocolUnavailable(error)) {
+          throw error;
+        }
         throw new UpdateCastLikeError({ castHash: cast.hash, error });
       }
     },

@@ -3,6 +3,7 @@ import {
   FarcasterNetwork,
   hexStringToBytes,
   makeCastAdd,
+  makeCastRemove,
   makeLinkAdd,
   makeLinkRemove,
   makeReactionAdd,
@@ -81,6 +82,20 @@ export async function buildCastAdd(
     'cast',
   );
   return message;
+}
+
+export async function buildCastRemove(
+  signer: ProtocolSigner,
+  hash: string,
+): Promise<Message> {
+  return unwrap(
+    await makeCastRemove(
+      { targetHash: hashBytes(hash) },
+      dataOptions(signer.fid),
+      nobleSigner(signer.privateKey),
+    ),
+    'cast remove',
+  );
 }
 
 export async function buildReaction(

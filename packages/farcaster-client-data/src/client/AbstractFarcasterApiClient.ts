@@ -380,6 +380,30 @@ abstract class AbstractFarcasterApiClient {
       };
     }
 
+    if (this.options.blockHostedWrites && method !== 'GET') {
+      const message = 'not available in SmashCast yet';
+      throw new HandledFetchError(`${endpointName} - ${message}`, {
+        absoluteUrl: url,
+        body,
+        endpointName,
+        error: 'protocol-direct',
+        hasTimedOut: false,
+        isHandled: true,
+        message,
+        isNetworkError: false,
+        method,
+        relativeUrl,
+        resolvedTimeout: 0,
+        response: undefined,
+        responseData: {
+          errors: [{ message }],
+        },
+        status: 400,
+        timeout: 0,
+        isOffline: false,
+      });
+    }
+
     if (this.options.isOffline) {
       throw new UnhandledFetchError(
         'Offline',

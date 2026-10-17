@@ -2,7 +2,7 @@ import { ApiCast } from 'farcaster-client-data';
 import { useCallback } from 'react';
 
 import { protocolReact } from '../../../protocol/api';
-import { protocolSession } from '../../../protocol/runtime';
+import { takeProtocolWrite } from '../../../protocol/writes';
 import { useFarcasterApiClient } from '../../../providers/FarcasterApiClientProvider';
 import { useOptimisticallyUpdateCast } from '../optimistic';
 import { useInvalidateUserCasts } from '../queries/userCasts/useInvalidateUserCasts';
@@ -15,6 +15,7 @@ const useUndoRecast = () => {
 
   return useCallback(
     async ({ cast, viewerFid }: { cast: ApiCast; viewerFid: number }) => {
+      const write = takeProtocolWrite();
       const revertOptimisticUpdates = optimisticallyUpdateCast({
         updates: {
           hash: cast.hash,
@@ -49,7 +50,7 @@ const useUndoRecast = () => {
       });
 
       try {
-        if (protocolSession()) {
+        if (write.mode === 'hub') {
           await protocolReact({
             action: 'remove',
             reaction: 'recast',

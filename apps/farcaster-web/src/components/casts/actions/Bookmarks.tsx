@@ -8,8 +8,9 @@ import { FC, memo, useMemo, useState } from 'react';
 
 import { CastReactionAction } from '~/components/casts/actions/CastReactionAction';
 import { CastActionProps } from '~/components/casts/actions/types';
+import { protocolDirectEnabled } from '~/constants/protocol';
 import { useIsSignedIn } from '~/hooks/data/useIsSignedIn';
-import { trackError } from '~/utils/errorUtils';
+import { reportCastActionError } from '~/utils/protocolWriteError';
 import { toast } from '~/utils/toast';
 
 type BookmarkIconProps = {
@@ -60,9 +61,10 @@ const Bookmarks: FC<CastActionProps> = memo(
         isActive={bookmarked}
         isFocused={!!isFocused}
         variant="purple"
-        disabled={!isSignedIn}
+        disabled={!isSignedIn && !protocolDirectEnabled}
+        label="Bookmark"
         onClick={async () => {
-          if (isSubmitting || !isSignedIn) {
+          if (isSubmitting || (!isSignedIn && !protocolDirectEnabled)) {
             return;
           }
 
@@ -84,9 +86,7 @@ const Bookmarks: FC<CastActionProps> = memo(
                   toastId: 'bookmarking-toast',
                 });
               } catch (error) {
-                // TODO: Add proper UI for error
-                trackError(error);
-                alert(error);
+                reportCastActionError(error);
               }
             } else {
               try {
@@ -97,9 +97,7 @@ const Bookmarks: FC<CastActionProps> = memo(
                   toastId: 'bookmarking-toast',
                 });
               } catch (error) {
-                // TODO: Add proper UI for error
-                trackError(error);
-                alert(error);
+                reportCastActionError(error);
               }
             }
           } finally {

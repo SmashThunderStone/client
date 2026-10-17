@@ -1,5 +1,7 @@
 import { useCallback } from 'react';
 
+import { protocolDeleteCast } from '../../../protocol/api';
+import { takeProtocolWrite } from '../../../protocol/writes';
 import { useFarcasterApiClient } from '../../../providers/FarcasterApiClientProvider';
 import { useOptimisticallyUpdateCast } from '../optimistic';
 import { useInvalidateActiveChannelStreak } from '../queries/activeChannelStreak/useInvalidateActiveChannelStreak';
@@ -28,13 +30,18 @@ const useDeleteCast = () => {
 
   return useCallback(
     async ({ cast }: { cast: CastToDelete }) => {
+      const write = takeProtocolWrite();
       const revertOptimisticUpdates = optimisticallyUpdateCast({
         updates: { hash: cast.hash, deleted: true },
         revertUpdates: { hash: cast.hash, deleted: cast.deleted },
       });
 
       try {
-        await apiClient.deleteCast({ castHash: cast.hash });
+        if (write.mode === 'hub') {
+          await protocolDeleteCast(cast.hash);
+        } else {
+          await apiClient.deleteCast({ castHash: cast.hash });
+        }
 
         invalidateFeedItems({ feedKey: 'home', feedType: 'default' });
 

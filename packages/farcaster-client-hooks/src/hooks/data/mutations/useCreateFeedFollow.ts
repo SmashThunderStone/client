@@ -2,6 +2,7 @@ import { AnalyticsEvent } from 'farcaster-analytics';
 import { useCallback } from 'react';
 
 import { CreateFeedFollowError } from '../../../errors';
+import { refuseHostedOnlyWrite } from '../../../protocol/writes';
 import { useTrackEvent } from '../../../providers/EventingProvider';
 import { useFarcasterApiClient } from '../../../providers/FarcasterApiClientProvider';
 import { useOptimisticallyFollowFeed } from '../channelUsers';
@@ -21,8 +22,9 @@ const useCreateFeedFollow = () => {
       following?: boolean;
       // used for analytics
       location?: string;
-    }) =>
-      await optimisticallyFollowFeed({
+    }) => {
+      refuseHostedOnlyWrite();
+      return await optimisticallyFollowFeed({
         feedKey,
         following,
         execute: async () => {
@@ -45,7 +47,8 @@ const useCreateFeedFollow = () => {
             });
           }
         },
-      }),
+      });
+    },
     [apiClient, optimisticallyFollowFeed, trackEvent],
   );
 };

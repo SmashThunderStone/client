@@ -25,11 +25,13 @@ import React, {
   useState,
 } from 'react';
 
+import { protocolDirectEnabled } from '~/constants/protocol';
 import { authTokenKey, getOnboardingStateKey } from '~/constants/storage';
 import { useClearKeyTransport } from '~/hooks/useClearKeyTransport';
+import { markHostedSessionCleared } from '~/protocol/hostedSession';
 import { Analytics } from '~/utils/analyticsUtils';
 import { trackError } from '~/utils/errorUtils';
-import { getItem, setItem } from '~/utils/storageUtils';
+import { deleteItem, getItem, setItem } from '~/utils/storageUtils';
 
 import { authOnError401Ref, AuthOnError401Trigger } from './authOnError401Ref';
 import { authSessionRecoveryRef } from './authSessionRecoveryRef';
@@ -199,6 +201,14 @@ const AuthProvider: FC<AuthProviderProps> = memo(({ children }) => {
       authToken: AuthToken | undefined;
       persist?: boolean;
     }) => {
+      if (protocolDirectEnabled) {
+        apiClient.updateOptions({
+          authToken: undefined,
+          blockHostedWrites: true,
+        });
+        return;
+      }
+
       setAuthToken(newAuthToken);
 
       apiClient.updateOptions({
@@ -279,6 +289,9 @@ const AuthProvider: FC<AuthProviderProps> = memo(({ children }) => {
   // (WebFarcasterApiClientProvider) and the onboarding-refresh catch above.
   const revalidateAndResetIfInvalid = useCallback(
     async (trigger: AuthOnError401Trigger) => {
+      if (protocolDirectEnabled) {
+        return;
+      }
       // Re-entry guard: the probe's own /v2/me call also flows through onError,
       // and the onboarding-refresh catch can fire for the same 401.
       if (isSigningOutRef.current || isRevalidatingRef.current) {
@@ -429,7 +442,19 @@ const AuthProvider: FC<AuthProviderProps> = memo(({ children }) => {
           fallback: undefined,
         });
 
-        if (persistedAuthToken) {
+        if (persistedAuthToken && protocolDirectEnabled) {
+          const onboardingStateKey = await getOnboardingStateKey(
+            persistedAuthToken.secret,
+          );
+          await deleteItem(authTokenKey);
+          await deleteItem(onboardingStateKey);
+          try {
+            window.localStorage.removeItem(authTokenKey);
+          } catch {
+            // localStorage can be blocked. IndexedDB is the session store.
+          }
+          markHostedSessionCleared();
+        } else if (persistedAuthToken) {
           signIn({ authToken: persistedAuthToken, persist: false });
 
           // Read cached onboardingState (key includes auth token secret)

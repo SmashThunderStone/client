@@ -16,7 +16,7 @@ import { ComposeCastModal } from '~/components/modals/ComposeCastModal';
 import { MenuItem } from '~/components/popovers/MenuItem';
 import { useAnalytics } from '~/contexts/AnalyticsProvider';
 import { useCurrentUser } from '~/hooks/data/useCurrentUser';
-import { trackError } from '~/utils/errorUtils';
+import { reportCastActionError } from '~/utils/protocolWriteError';
 
 type RecastOptionsProps = {
   cast: ApiCast;
@@ -148,8 +148,7 @@ const RecastOptionsPopoverContent: React.FC<
           });
         }
       } catch (error) {
-        trackError(error);
-        alert(error);
+        reportCastActionError(error);
       }
     },
     [

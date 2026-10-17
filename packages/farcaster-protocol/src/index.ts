@@ -45,6 +45,7 @@ export {
 export type { CastDraft, ProtocolSigner } from './messages';
 export {
   buildCastAdd,
+  buildCastRemove,
   buildFollow,
   buildReaction,
   CAST_BYTE_LIMIT,

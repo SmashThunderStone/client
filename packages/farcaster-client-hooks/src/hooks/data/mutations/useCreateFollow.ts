@@ -4,7 +4,11 @@ import { useCallback } from 'react';
 
 import { CreateFollowError } from '../../../errors';
 import { protocolFollow, protocolFollowResponse } from '../../../protocol/api';
-import { protocolSession } from '../../../protocol/runtime';
+import {
+  isProtocolSignInRequired,
+  isProtocolUnavailable,
+  takeProtocolWrite,
+} from '../../../protocol/writes';
 import { useFarcasterApiClient } from '../../../providers/FarcasterApiClientProvider';
 import { useOptimisticallyUpdateUser } from '../optimistic/useOptimisticallyUpdateUser';
 import { buildUserAppContextKey } from '../queries/userAppContext/buildUserAppContextKey';
@@ -22,6 +26,7 @@ const useCreateFollow = () => {
       followee: ApiUser;
       follower: ApiUser;
     }) => {
+      const write = takeProtocolWrite();
       const revertFollowerUpdate = optimisticallyUpdateUser({
         updates: {
           fid: follower.fid,
@@ -51,17 +56,18 @@ const useCreateFollow = () => {
       });
 
       try {
-        const data = protocolSession()
-          ? (await protocolFollow({
-              action: 'add',
-              targetFid: followee.fid,
-            }),
-            protocolFollowResponse())
-          : (
-              await apiClient.createFollow({
+        const data =
+          write.mode === 'hub'
+            ? (await protocolFollow({
+                action: 'add',
                 targetFid: followee.fid,
-              })
-            ).data;
+              }),
+              protocolFollowResponse())
+            : (
+                await apiClient.createFollow({
+                  targetFid: followee.fid,
+                })
+              ).data;
 
         const userAppContextKey = buildUserAppContextKey();
         queryClient.setQueryData(
@@ -77,6 +83,9 @@ const useCreateFollow = () => {
       } catch (error) {
         revertFollowerUpdate();
         revertFolloweeUpdates();
+        if (isProtocolSignInRequired(error) || isProtocolUnavailable(error)) {
+          throw error;
+        }
 
         throw new CreateFollowError({
           error,

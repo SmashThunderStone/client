@@ -27,6 +27,7 @@ import {
 } from 'farcaster-client-data';
 import {
   buildCastAdd,
+  buildCastRemove,
   buildFollow,
   buildReaction,
   castReadBackPath,
@@ -458,6 +459,20 @@ export async function protocolCreateCast(params: {
     sessionAuthor(session),
   );
   return { result: { cast } };
+}
+
+export async function protocolDeleteCast(hash: string): Promise<void> {
+  const { hubUrl, session } = requireSession();
+  const message = await buildCastRemove(
+    { fid: session.fid, privateKey: session.privateKey },
+    hash,
+  );
+  await publishMessage(
+    hubUrl,
+    message,
+    castReadBackPath(session.fid, hash),
+    'absent',
+  );
 }
 
 export async function protocolReact(params: {

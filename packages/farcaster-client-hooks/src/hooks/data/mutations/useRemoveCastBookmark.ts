@@ -1,6 +1,7 @@
 import { ApiCast } from 'farcaster-client-data';
 import { useCallback } from 'react';
 
+import { refuseHostedOnlyWrite } from '../../../protocol/writes';
 import { useFarcasterApiClient } from '../../../providers/FarcasterApiClientProvider';
 import { useOptimisticallyUpdateCast } from '../optimistic';
 import { useInvalidateBookmarkedCasts } from '../queries/bookmarkedCasts/useInvalidateBookmarkedCasts';
@@ -13,6 +14,7 @@ const useRemoveCastBookmark = () => {
 
   return useCallback(
     async ({ cast }: { cast: ApiCast }) => {
+      refuseHostedOnlyWrite();
       const revertOptimisticUpdates = optimisticallyUpdateCast({
         updates: {
           hash: cast.hash,

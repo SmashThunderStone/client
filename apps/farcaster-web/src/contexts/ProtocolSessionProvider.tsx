@@ -41,7 +41,7 @@ const ProtocolSessionProvider: FC<ProtocolSessionProviderProps> = ({
     getProtocolSession,
     getProtocolSession,
   );
-  const { authToken, addSignOutListener } = useAuth();
+  const { addSignOutListener } = useAuth();
   const { apiClient } = useFarcasterApiClient();
   const queryClient = useQueryClient();
   const [hydrated, setHydrated] = useState(false);
@@ -118,14 +118,18 @@ const ProtocolSessionProvider: FC<ProtocolSessionProviderProps> = ({
   }, [queryClient]);
 
   useEffect(() => {
+    if (!protocolDirectEnabled) {
+      return;
+    }
     apiClient.updateOptions({
-      protocolDirectAnonymous:
-        protocolDirectEnabled && Boolean(session) && !authToken,
+      authToken: undefined,
+      blockHostedWrites: true,
+      protocolDirectAnonymous: Boolean(session),
     });
-  }, [apiClient, authToken, session]);
+  }, [apiClient, session]);
 
   useEffect(() => {
-    if (!protocolDirectEnabled || !hydrated || authToken) {
+    if (!protocolDirectEnabled || !hydrated) {
       return;
     }
     if (!session) {
@@ -190,7 +194,7 @@ const ProtocolSessionProvider: FC<ProtocolSessionProviderProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [authToken, hydrated, queryClient, session]);
+  }, [hydrated, queryClient, session]);
 
   return (
     <ProtocolHydrationContext.Provider
